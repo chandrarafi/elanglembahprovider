@@ -25,6 +25,13 @@ class RoleFilter implements FilterInterface
 
         // Jika role user tidak sesuai dengan yang diizinkan
         if (!in_array($userRole, $arguments)) {
+            // Jika mencoba akses admin, redirect ke home dengan pesan error
+            $uri = $request->getUri()->getPath();
+            if (strpos($uri, 'admin') === 0) {
+                return redirect()->to('home')->with('error', 'Anda tidak memiliki akses ke halaman admin');
+            }
+
+            // Untuk halaman lain, redirect back dengan pesan error
             return redirect()->back()->with('error', 'Anda tidak memiliki akses ke halaman tersebut');
         }
     }

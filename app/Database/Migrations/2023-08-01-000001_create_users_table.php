@@ -34,18 +34,32 @@ class CreateUsersTable extends Migration
                 'constraint' => 100,
             ],
             'role' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 20,
-                'comment'    => 'admin, user, dll',
+                'type'       => 'ENUM',
+                'constraint' => ['admin', 'direktur', 'pelanggan'],
+                'default'    => 'pelanggan',
+                'comment'    => 'admin, direktur, pelanggan',
             ],
             'status' => [
+                'type'       => 'ENUM',
+                'constraint' => ['active', 'inactive'],
+                'default'    => 'active',
+            ],
+            'phone' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 20,
-                'default'    => 'active',
-                'comment'    => 'active, inactive',
+                'null'       => true,
+            ],
+            'address' => [
+                'type'       => 'TEXT',
+                'null'       => true,
             ],
             'last_login' => [
                 'type'       => 'DATETIME',
+                'null'       => true,
+            ],
+            'last_page_visited' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 255,
                 'null'       => true,
             ],
             'remember_token' => [
@@ -68,19 +82,6 @@ class CreateUsersTable extends Migration
         ]);
         $this->forge->addKey('id', true);
         $this->forge->createTable('users');
-
-        // Tambahkan admin default
-        $data = [
-            'username'   => 'admin',
-            'email'      => 'admin@example.com',
-            'password'   => password_hash('admin123', PASSWORD_DEFAULT),
-            'name'       => 'Administrator',
-            'role'       => 'admin',
-            'status'     => 'active',
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s'),
-        ];
-        $this->db->table('users')->insert($data);
     }
 
     public function down()

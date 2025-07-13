@@ -10,37 +10,43 @@ class AuthFilter implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        // Load helper cookie
-        helper('cookie');
+        $session = session();
+        $uri = $request->getUri()->getPath();
 
-        if (!session()->get('logged_in')) {
-            // Cek remember me cookie
-            $userId = get_cookie('user_id');
-            $rememberToken = get_cookie('remember_token');
-
-            if ($userId && $rememberToken) {
-                $userModel = new \App\Models\UserModel();
-                $user = $userModel->find($userId);
-
-                if ($user && $user['remember_token'] === $rememberToken) {
-                    // Set session
-                    $sessionData = [
-                        'user_id' => $user['id'],
-                        'username' => $user['username'],
-                        'email' => $user['email'],
-                        'name' => $user['name'],
-                        'role' => $user['role'],
-                        'logged_in' => true
-                    ];
-                    session()->set($sessionData);
-                    return;
-                }
+        // Jika belum login dan mencoba mengakses halaman yang butuh auth
+        if (!$session->get('logged_in')) {
+            // Jika bukan halaman auth, redirect ke login
+            if (strpos($uri, 'auth') !== 0) {
+                // Simpan URL yang dicoba diakses untuk redirect setelah login
+                $session->set('redirect_url', current_url());
+                return redirect()->to('/auth')->with('error', 'Silakan login terlebih dahulu');
             }
+            return;
+        }
 
-            // Simpan URL yang dicoba diakses
-            session()->set('redirect_url', current_url());
+        // Jika sudah login dan mencoba mengakses halaman auth
+        if ($session->get('logged_in') && strpos($uri, 'auth') === 0) {
+            // Redirect ke halaman yang sesuai dengan role
+            switch ($session->get('role')) {
+                case 'admin':
+                    return redirect()->to('/admin');
+                case 'direktur':
+                    return redirect()->to('/laporan');
+                case 'pelanggan':
+                    return redirect()->to('/home');
+                default:
+                    return redirect()->to('/');
+            }
+        }
 
-            return redirect()->to('auth');
+        // Jika mencoba mengakses halaman admin tapi bukan admin
+        if (strpos($uri, 'admin') === 0 && $session->get('role') !== 'admin') {
+            return redirect()->to('/')->with('error', 'Anda tidak memiliki akses ke halaman tersebut');
+        }
+
+        // Jika mencoba mengakses halaman laporan tapi bukan direktur atau admin
+        if (strpos($uri, 'laporan') === 0 && !in_array($session->get('role'), ['direktur', 'admin'])) {
+            return redirect()->to('/')->with('error', 'Anda tidak memiliki akses ke halaman tersebut');
         }
     }
 

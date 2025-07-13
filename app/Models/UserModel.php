@@ -6,111 +6,160 @@ use CodeIgniter\Model;
 
 class UserModel extends Model
 {
-    protected $DBGroup          = 'default';
-    protected $table            = 'users';
-    protected $primaryKey       = 'id';
+    protected $table = 'users';
+    protected $primaryKey = 'id';
     protected $useAutoIncrement = true;
-    protected $returnType       = 'array';
-    protected $useSoftDeletes   = false;
-    protected $protectFields    = true;
-    protected $allowedFields    = ['username', 'email', 'password', 'role', 'name', 'status', 'last_login', 'remember_token'];
+    protected $returnType = 'array';
+    protected $useSoftDeletes = true;
 
-    // Dates
+    protected $allowedFields = [
+        'username',
+        'email',
+        'password',
+        'name',
+        'role',
+        'status',
+        'phone',
+        'address',
+        'last_login',
+        'last_page_visited',
+        'remember_token'
+    ];
+
     protected $useTimestamps = true;
-    protected $dateFormat    = 'datetime';
-    protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at';
-    protected $deletedField  = 'deleted_at';
+    protected $createdField = 'created_at';
+    protected $updatedField = 'updated_at';
+    protected $deletedField = 'deleted_at';
 
-    // Validation
-    protected $validationRules = [];
-    protected $validationMessages = [];
-    protected $skipValidation       = false;
-    protected $cleanValidationRules = true;
+    protected $validationRules = [
+        'username' => 'required|min_length[3]|max_length[100]|is_unique[users.username]',
+        'email'    => 'required|valid_email|is_unique[users.email]',
+        'password' => 'required|min_length[6]',
+        'name'     => 'required|min_length[3]|max_length[100]',
+        'role'     => 'required|in_list[admin,direktur,pelanggan]',
+        'status'   => 'required|in_list[active,inactive]',
+        'phone'    => 'permit_empty|min_length[10]|max_length[20]',
+        'address'  => 'permit_empty'
+    ];
 
-    // Callbacks
-    protected $allowCallbacks = true;
-    protected $beforeInsert   = ['hashPassword'];
-    protected $beforeUpdate   = ['hashPassword'];
+    protected $validationRulesForUpdate = [
+        'username' => 'required|min_length[3]|max_length[100]|is_unique[users.username,id,{id}]',
+        'email'    => 'required|valid_email|is_unique[users.email,id,{id}]',
+        'password' => 'permit_empty|min_length[6]',
+        'name'     => 'required|min_length[3]|max_length[100]',
+        'role'     => 'required|in_list[admin,direktur,pelanggan]',
+        'status'   => 'required|in_list[active,inactive]',
+        'phone'    => 'permit_empty|min_length[10]|max_length[20]',
+        'address'  => 'permit_empty'
+    ];
 
-    public function __construct()
-    {
-        parent::__construct();
-        $this->initValidationRules();
-    }
+    protected $validationMessages = [
+        'username' => [
+            'required' => 'Username harus diisi',
+            'min_length' => 'Username minimal 3 karakter',
+            'max_length' => 'Username maksimal 100 karakter',
+            'is_unique' => 'Username sudah digunakan'
+        ],
+        'email' => [
+            'required' => 'Email harus diisi',
+            'valid_email' => 'Format email tidak valid',
+            'is_unique' => 'Email sudah digunakan'
+        ],
+        'password' => [
+            'required' => 'Password harus diisi',
+            'min_length' => 'Password minimal 6 karakter'
+        ],
+        'name' => [
+            'required' => 'Nama harus diisi',
+            'min_length' => 'Nama minimal 3 karakter',
+            'max_length' => 'Nama maksimal 100 karakter'
+        ],
+        'role' => [
+            'required' => 'Role harus diisi',
+            'in_list' => 'Role tidak valid'
+        ],
+        'status' => [
+            'required' => 'Status harus diisi',
+            'in_list' => 'Status tidak valid'
+        ],
+        'phone' => [
+            'min_length' => 'Nomor telepon minimal 10 karakter',
+            'max_length' => 'Nomor telepon maksimal 20 karakter'
+        ]
+    ];
 
-    protected function initValidationRules()
-    {
-        $this->validationRules = [
-            'id' => 'permit_empty|is_natural_no_zero',
-            'username' => [
-                'rules' => 'required|alpha_numeric_space|min_length[3]|is_unique[users.username,id,{id}]',
-                'errors' => [
-                    'required' => 'Username harus diisi',
-                    'alpha_numeric_space' => 'Username hanya boleh berisi huruf, angka dan spasi',
-                    'min_length' => 'Username minimal 3 karakter',
-                    'is_unique' => 'Username sudah digunakan'
-                ]
-            ],
-            'email' => [
-                'rules' => 'required|valid_email|is_unique[users.email,id,{id}]',
-                'errors' => [
-                    'required' => 'Email harus diisi',
-                    'valid_email' => 'Format email tidak valid',
-                    'is_unique' => 'Email sudah digunakan'
-                ]
-            ],
-            'password' => [
-                'rules' => 'required|min_length[6]',
-                'errors' => [
-                    'required' => 'Password harus diisi untuk user baru',
-                    'min_length' => 'Password minimal 6 karakter'
-                ]
-            ],
-            'role' => [
-                'rules' => 'required|in_list[admin,manager,user]',
-                'errors' => [
-                    'required' => 'Role harus dipilih',
-                    'in_list' => 'Role tidak valid'
-                ]
-            ],
-            'name' => [
-                'rules' => 'required|min_length[3]|max_length[100]',
-                'errors' => [
-                    'required' => 'Nama lengkap harus diisi',
-                    'min_length' => 'Nama lengkap minimal 3 karakter',
-                    'max_length' => 'Nama lengkap maksimal 100 karakter'
-                ]
-            ],
-            'status' => [
-                'rules' => 'required|in_list[active,inactive]',
-                'errors' => [
-                    'required' => 'Status harus dipilih',
-                    'in_list' => 'Status tidak valid'
-                ]
-            ],
-
-        ];
-    }
-
-    public function save($data): bool
-    {
-        // Jika ini adalah update, ubah validasi password menjadi opsional
-        if (!empty($data['id'])) {
-            $this->validationRules['password']['rules'] = 'permit_empty|min_length[6]';
-        }
-
-        return parent::save($data);
-    }
+    protected $beforeInsert = ['hashPassword'];
+    protected $beforeUpdate = ['hashPassword'];
 
     protected function hashPassword(array $data)
     {
-        if (!isset($data['data']['password']) || empty($data['data']['password'])) {
+        if (!isset($data['data']['password'])) {
             return $data;
         }
 
         $data['data']['password'] = password_hash($data['data']['password'], PASSWORD_DEFAULT);
-
         return $data;
+    }
+
+    public function findUserByCredentials($username, $password)
+    {
+        $user = $this->where('username', $username)
+            ->orWhere('email', $username)
+            ->first();
+
+        if ($user && password_verify($password, $user['password'])) {
+            // Update last login
+            $this->update($user['id'], ['last_login' => date('Y-m-d H:i:s')]);
+            return $user;
+        }
+
+        return null;
+    }
+
+    public function getRedirectURL($role, $lastPageVisited = null)
+    {
+        switch ($role) {
+            case 'admin':
+                return '/admin';
+            case 'direktur':
+                return '/laporan';
+            case 'pelanggan':
+                return $lastPageVisited ?? '/';
+            default:
+                return '/';
+        }
+    }
+
+    public function update($id = null, $data = null): bool
+    {
+        if ($id === null) {
+            return false;
+        }
+
+        // Jika update user, password bisa kosong
+        $rules = [
+            'username' => "required|min_length[3]|max_length[100]|is_unique[users.username,id,$id]",
+            'email'    => "required|valid_email|is_unique[users.email,id,$id]",
+            'password' => 'permit_empty|min_length[6]',
+            'name'     => 'required|min_length[3]|max_length[100]',
+            'role'     => 'required|in_list[admin,direktur,pelanggan]',
+            'status'   => 'required|in_list[active,inactive]',
+            'phone'    => 'permit_empty|min_length[10]|max_length[20]',
+            'address'  => 'permit_empty'
+        ];
+
+        // Simpan validasi rules asli
+        $originalRules = $this->validationRules;
+
+        // Set validasi rules untuk update
+        $this->validationRules = $rules;
+
+        // Jalankan update
+        $result = parent::update($id, $data);
+
+        // Kembalikan validasi rules asli
+        $this->validationRules = $originalRules;
+
+        return $result;
     }
 }

@@ -76,6 +76,7 @@ class Filters extends BaseFilters
             // 'honeypot',
             // 'csrf',
             // 'invalidchars',
+            'auth', // Tambahkan auth filter secara global
         ],
         'after' => [
             // 'honeypot',

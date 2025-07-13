@@ -70,10 +70,18 @@ class Auth extends BaseController
                     $this->setRememberMeCookie($user['id']);
                 }
 
+                // Redirect berdasarkan role
+                $redirect = 'admin';
+                if ($user['role'] === 'pelanggan') {
+                    $redirect = '/';
+                } elseif ($user['role'] === 'direktur') {
+                    $redirect = 'laporan';
+                }
+
                 return $this->response->setJSON([
                     'status' => 'success',
                     'message' => 'Login berhasil',
-                    'redirect' => site_url('admin')
+                    'redirect' => site_url($redirect)
                 ]);
             }
         } else {

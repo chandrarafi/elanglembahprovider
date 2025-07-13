@@ -2,10 +2,10 @@
 
 namespace App\Controllers;
 
-use CodeIgniter\RESTful\ResourceController;
 use App\Models\UserModel;
+use CodeIgniter\RESTful\ResourceController;
 
-class Admin extends BaseController
+class Admin extends ResourceController
 {
     protected $userModel;
 
@@ -16,181 +16,195 @@ class Admin extends BaseController
 
     public function index()
     {
-        $title = 'Dashboard';
-        return view('admin/dashboard', compact('title'));
+        return view('admin/dashboard');
     }
 
-    // User Management
     public function users()
     {
-        $title = 'User Management';
-        return view('admin/users/index', compact('title'));
+        return view('admin/users/index');
     }
 
+    // API untuk DataTables
     public function getUsers()
     {
-        $request = $this->request;
+        $request = $this->request->getGet();
+        $db = \Config\Database::connect();
+        $builder = $db->table('users');
 
-        // Parameters for DataTables
-        $start = $request->getGet('start') ?? 0;
-        $length = $request->getGet('length') ?? 10;
-        $search = $request->getGet('search')['value'] ?? '';
-        $order = $request->getGet('order') ?? [];
-        $roleFilter = $request->getGet('role') ?? '';
-        $statusFilter = $request->getGet('status') ?? '';
+        // Total records
+        $totalRecords = $builder->countAllResults(false);
 
-        $orderColumn = $order[0]['column'] ?? 0;
-        $orderDir = $order[0]['dir'] ?? 'asc';
+        // Filter berdasarkan role dan status jika ada
+        if (!empty($request['role'])) {
+            $builder->where('role', $request['role']);
+        }
+        if (!empty($request['status'])) {
+            $builder->where('status', $request['status']);
+        }
 
-        // Columns for ordering
-        $columns = ['id', 'username', 'email', 'name', 'role', 'status', 'last_login'];
-        $orderBy = $columns[$orderColumn] ?? 'id';
-
-        // Build query
-        $builder = $this->userModel->builder();
-
-        // Filtering
-        if (!empty($search)) {
+        // Search
+        if (!empty($request['search']['value'])) {
+            $searchValue = $request['search']['value'];
             $builder->groupStart()
-                ->like('username', $search)
-                ->orLike('email', $search)
-                ->orLike('name', $search)
-                ->orLike('role', $search)
+                ->like('username', $searchValue)
+                ->orLike('email', $searchValue)
+                ->orLike('name', $searchValue)
                 ->groupEnd();
         }
 
-        // Role filter
-        if (!empty($roleFilter)) {
-            $builder->where('role', $roleFilter);
-        }
+        // Total records with filter
+        $totalRecordsWithFilter = $builder->countAllResults(false);
 
-        // Status filter
-        if (!empty($statusFilter)) {
-            $builder->where('status', $statusFilter);
-        }
+        // Fetch records
+        $builder->orderBy($request['columns'][$request['order'][0]['column']]['data'], $request['order'][0]['dir'])
+            ->limit($request['length'], $request['start']);
 
-        // Count total records (without filters)
-        $totalRecords = $this->userModel->countAll();
+        $records = $builder->get()->getResultArray();
 
-        // Count filtered records
-        $filteredRecords = $builder->countAllResults(false);
-
-        // Get data with limit, offset, order
-        $data = $builder->orderBy($orderBy, $orderDir)
-            ->limit($length, $start)
-            ->get()
-            ->getResultArray();
-
-        // Prepare response for DataTables
         $response = [
-            'draw' => $request->getGet('draw') ?? 1,
-            'recordsTotal' => $totalRecords,
-            'recordsFiltered' => $filteredRecords,
-            'data' => $data
+            "draw" => intval($request['draw']),
+            "recordsTotal" => $totalRecords,
+            "recordsFiltered" => $totalRecordsWithFilter,
+            "data" => $records
         ];
 
         return $this->response->setJSON($response);
     }
 
-    protected function handleUserSave($data, $isNew = true)
+    public function getRoles()
     {
-        if ($this->userModel->save($data)) {
-            return $this->response->setJSON([
-                'status' => 'success',
-                'message' => $isNew ? 'User berhasil ditambahkan' : 'User berhasil diperbarui'
-            ]);
-        }
-
-        return $this->response->setStatusCode(400)->setJSON([
-            'status' => 'error',
-            'message' => $isNew ? 'Gagal menambahkan user' : 'Gagal memperbarui user',
-            'errors' => $this->userModel->errors()
+        $roles = ['admin', 'direktur', 'pelanggan'];
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data' => $roles
         ]);
-    }
-
-    public function addUser()
-    {
-        return $this->handleUserSave($this->request->getPost(), true);
     }
 
     public function createUser()
     {
-        return $this->handleUserSave($this->request->getJSON(true), true);
-    }
+        $data = $this->request->getPost();
 
-    public function getUser($id = null)
-    {
-        $data = $this->userModel->find($id);
-
-        if ($data) {
-            return $this->response->setJSON([
-                'status' => 'success',
-                'data' => $data
-            ]);
+        // Hapus ID jika ada (untuk memastikan ini adalah operasi insert)
+        if (isset($data['id'])) {
+            unset($data['id']);
         }
 
-        return $this->response->setStatusCode(404)->setJSON([
-            'status' => 'error',
-            'message' => 'User tidak ditemukan'
-        ]);
+        try {
+            // Hash password sebelum disimpan (tidak perlu lagi karena sudah ada di model)
+
+            // Log data yang akan disimpan (tanpa password untuk keamanan)
+            $logData = $data;
+            if (isset($logData['password'])) {
+                $logData['password'] = '******';
+            }
+            log_message('debug', 'Data yang akan disimpan: ' . print_r($logData, true));
+
+            if (!$this->userModel->insert($data)) {
+                // Log error dari model
+                log_message('error', 'Error dari model: ' . print_r($this->userModel->errors(), true));
+
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Validasi gagal',
+                    'errors' => $this->userModel->errors()
+                ])->setStatusCode(400);
+            }
+
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'User berhasil ditambahkan'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat menambahkan user: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal menambahkan user: ' . $e->getMessage()
+            ])->setStatusCode(500);
+        }
     }
 
     public function updateUser($id = null)
     {
         $data = $this->request->getPost();
 
-        // Pastikan ID selalu diset dengan benar
-        if (!empty($id)) {
-            $data['id'] = $id;
-        } elseif (!empty($data['id'])) {
-            $id = $data['id'];
-        }
+        try {
+            // Jika password kosong, hapus dari data
+            if (empty($data['password'])) {
+                unset($data['password']);
+            }
 
-        // Validasi ID
-        if (empty($id)) {
-            return $this->response->setStatusCode(400)->setJSON([
-                'status' => 'error',
-                'message' => 'ID user tidak valid',
-                'errors' => ['id' => 'ID user tidak ditemukan']
+            // Log data yang akan diupdate (tanpa password untuk keamanan)
+            $logData = $data;
+            if (isset($logData['password'])) {
+                $logData['password'] = '******';
+            }
+            log_message('debug', 'Data yang akan diupdate: ' . print_r($logData, true));
+
+            if (!$this->userModel->update($id, $data)) {
+                // Log error dari model
+                log_message('error', 'Error dari model: ' . print_r($this->userModel->errors(), true));
+
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Validasi gagal',
+                    'errors' => $this->userModel->errors()
+                ])->setStatusCode(400);
+            }
+
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'User berhasil diupdate'
             ]);
-        }
-
-        // Cek apakah user exists
-        $existingUser = $this->userModel->find($id);
-        if (!$existingUser) {
-            return $this->response->setStatusCode(404)->setJSON([
+        } catch (\Exception $e) {
+            log_message('error', 'Error saat mengupdate user: ' . $e->getMessage());
+            return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'User tidak ditemukan',
-                'errors' => ['id' => 'User dengan ID tersebut tidak ditemukan']
-            ]);
+                'message' => 'Gagal mengupdate user: ' . $e->getMessage()
+            ])->setStatusCode(500);
         }
-
-        return $this->handleUserSave($data, false);
     }
 
     public function deleteUser($id = null)
     {
-        if ($this->userModel->delete($id)) {
+        try {
+            $this->userModel->delete($id);
             return $this->response->setJSON([
                 'status' => 'success',
                 'message' => 'User berhasil dihapus'
             ]);
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal menghapus user'
+            ])->setStatusCode(500);
         }
-
-        return $this->response->setStatusCode(400)->setJSON([
-            'status' => 'error',
-            'message' => 'Gagal menghapus user'
-        ]);
     }
 
-    public function getRoles()
+    public function getUser($id = null)
     {
-        // Daftar role yang tersedia
-        $roles = ['admin', 'manager', 'user'];
+        if (!$id) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'ID tidak valid'
+            ])->setStatusCode(400);
+        }
+
+        $user = $this->userModel->find($id);
+        if ($user) {
+            // Pastikan password tidak dikirim ke client
+            if (isset($user['password'])) {
+                unset($user['password']);
+            }
+
+            return $this->response->setJSON([
+                'status' => 'success',
+                'data' => $user
+            ]);
+        }
 
         return $this->response->setJSON([
-            'status' => 'success',
-            'data' => $roles
-        ]);
+            'status' => 'error',
+            'message' => 'User tidak ditemukan'
+        ])->setStatusCode(404);
     }
 }
