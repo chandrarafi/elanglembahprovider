@@ -33,7 +33,7 @@ Events::on('pre_system', static function (): void {
             ob_end_flush();
         }
 
-        ob_start(static fn ($buffer) => $buffer);
+        ob_start(static fn($buffer) => $buffer);
     }
 
     /*
@@ -52,4 +52,10 @@ Events::on('pre_system', static function (): void {
             });
         }
     }
+});
+
+// Event untuk mengecek remember me token sebelum aplikasi berjalan
+Events::on('pre_controller', function () {
+    helper('cookie');
+    checkRememberMeToken();
 });

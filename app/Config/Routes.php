@@ -8,6 +8,13 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Home::index');
 $routes->get('/home', 'Home::index');
 
+// Halaman Publik
+$routes->get('/paket', 'Paket::index');
+$routes->get('/paket/detail/(:segment)', 'Paket::detail/$1');
+$routes->get('/kategori', 'Kategori::index');
+$routes->get('/kategori/(:segment)', 'Kategori::show/$1');
+$routes->get('/about', 'About::index');
+
 // Auth Routes (tidak perlu filter auth)
 $routes->group('auth', function ($routes) {
     $routes->get('', 'Auth::index');
@@ -29,6 +36,8 @@ $routes->group('booking', ['filter' => 'auth'], function ($routes) {
     $routes->get('create/(:segment)', 'Booking::create/$1');
     $routes->post('store', 'Booking::store');
     $routes->post('cancel/(:num)', 'Booking::cancel/$1');
+    $routes->get('payment/(:num)', 'Booking::payment/$1');
+    $routes->post('savePayment', 'Booking::savePayment');
 });
 
 // Admin routes (perlu filter auth dan role admin)
@@ -69,4 +78,12 @@ $routes->group('admin', ['filter' => ['auth', 'role:admin']], function ($routes)
     $routes->post('createPelanggan', 'Pelanggan::createPelanggan');
     $routes->post('updatePelanggan/(:segment)', 'Pelanggan::updatePelanggan/$1');
     $routes->delete('deletePelanggan/(:segment)', 'Pelanggan::deletePelanggan/$1');
+
+    // Pemesanan Management
+    $routes->get('pemesanan', 'Admin\Pemesanan::index');
+    $routes->get('pemesanan/detail/(:num)', 'Admin\Pemesanan::detail/$1');
+    $routes->post('pemesanan/updateStatus/(:num)', 'Admin\Pemesanan::updateStatus/$1');
+    $routes->post('pemesanan/verifyPayment/(:num)', 'Admin\Pemesanan::verifyPayment/$1');
+    $routes->get('pemesanan/create', 'Admin\Pemesanan::create');
+    $routes->post('pemesanan/store', 'Admin\Pemesanan::store');
 });

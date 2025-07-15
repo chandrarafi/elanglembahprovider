@@ -15,13 +15,9 @@ class AuthFilter implements FilterInterface
 
         // Jika belum login dan mencoba mengakses halaman yang butuh auth
         if (!$session->get('logged_in')) {
-            // Jika bukan halaman auth, redirect ke login
-            if (strpos($uri, 'auth') !== 0) {
-                // Simpan URL yang dicoba diakses untuk redirect setelah login
-                $session->set('redirect_url', current_url());
-                return redirect()->to('/auth')->with('error', 'Silakan login terlebih dahulu');
-            }
-            return;
+            // Simpan URL yang dicoba diakses untuk redirect setelah login
+            $session->set('redirect_url', current_url());
+            return redirect()->to('/auth')->with('error', 'Silakan login terlebih dahulu');
         }
 
         // Jika sudah login dan mencoba mengakses halaman auth
@@ -33,7 +29,7 @@ class AuthFilter implements FilterInterface
                 case 'direktur':
                     return redirect()->to('/laporan');
                 case 'pelanggan':
-                    return redirect()->to('/home');
+                    return redirect()->to('/');
                 default:
                     return redirect()->to('/');
             }

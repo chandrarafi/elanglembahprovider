@@ -19,7 +19,14 @@ class Auth extends BaseController
     {
         // Jika sudah login, redirect ke dashboard
         if (session()->get('logged_in')) {
-            return redirect()->to(session()->get('redirect_url') ?? 'admin');
+            $role = session()->get('role');
+            if ($role === 'admin') {
+                return redirect()->to('admin');
+            } elseif ($role === 'direktur') {
+                return redirect()->to('laporan');
+            } else {
+                return redirect()->to('/');
+            }
         }
 
         return view('auth/login');

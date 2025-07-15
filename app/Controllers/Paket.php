@@ -18,7 +18,110 @@ class Paket extends BaseController
         $this->kategoriModel = new KategoriModel();
     }
 
+    // Halaman publik untuk daftar paket wisata
     public function index()
+    {
+        // Filter berdasarkan kategori jika ada
+        $kategori_id = $this->request->getGet('kategori');
+        $sort = $this->request->getGet('sort');
+        $search = $this->request->getGet('search');
+
+        $query = $this->paketModel->where('statuspaket', 'active');
+
+        // Filter by kategori
+        if ($kategori_id) {
+            $query->where('idkategori', $kategori_id);
+        }
+
+        // Sort options
+        if ($sort == 'price_low') {
+            $query->orderBy('harga', 'ASC');
+        } elseif ($sort == 'price_high') {
+            $query->orderBy('harga', 'DESC');
+        } elseif ($sort == 'popular') {
+            $query->orderBy('RAND()'); // Asumsi untuk popular (bisa diganti jika ada field khusus)
+        } else {
+            $query->orderBy('created_at', 'DESC'); // Default sort by newest
+        }
+
+        // Search
+        if ($search) {
+            $query->like('namapaket', $search);
+        }
+
+        // Get paket wisata
+        $paketList = $query->findAll();
+
+        // Get kategori untuk setiap paket
+        foreach ($paketList as $key => $paket) {
+            $kategoriDetail = $this->kategoriModel->find($paket['idkategori']);
+            $paketList[$key]['kategori_nama'] = $kategoriDetail['namakategori'] ?? '';
+        }
+
+        // Data untuk view
+        $data = [
+            'title' => 'Paket Wisata - Elang Lembah Travel',
+            'paketList' => $paketList,
+            'kategori' => $this->kategoriModel->where('status', 'active')->findAll(),
+            'selectedKategori' => $kategori_id,
+            'sort' => $sort,
+            'search' => $search,
+            'is_logged_in' => session()->get('logged_in') ?? false,
+            'user' => [
+                'name' => session()->get('name') ?? '',
+                'role' => session()->get('role') ?? ''
+            ]
+        ];
+
+        return view('paket/index', $data);
+    }
+
+    // Halaman detail paket wisata
+    public function detail($id = null)
+    {
+        if (!$id) {
+            return redirect()->to('/paket')->with('error', 'ID paket tidak valid');
+        }
+
+        $paket = $this->paketModel->find($id);
+        if (!$paket) {
+            return redirect()->to('/paket')->with('error', 'Paket wisata tidak ditemukan');
+        }
+
+        // Pastikan hanya paket aktif yang bisa diakses
+        if ($paket['statuspaket'] !== 'active') {
+            return redirect()->to('/paket')->with('error', 'Paket wisata tidak tersedia');
+        }
+
+        // Get kategori
+        $kategori = $this->kategoriModel->find($paket['idkategori']);
+
+        // Get paket terkait (dari kategori yang sama)
+        $related_pakets = $this->paketModel
+            ->where('statuspaket', 'active')
+            ->where('idkategori', $paket['idkategori'])
+            ->where('idpaket !=', $id) // Exclude current paket
+            ->orderBy('RAND()')
+            ->limit(3)
+            ->find();
+
+        $data = [
+            'title' => $paket['namapaket'] . ' - Elang Lembah Travel',
+            'paket' => $paket,
+            'kategori' => $kategori,
+            'related_pakets' => $related_pakets,
+            'is_logged_in' => session()->get('logged_in') ?? false,
+            'user' => [
+                'name' => session()->get('name') ?? '',
+                'role' => session()->get('role') ?? ''
+            ]
+        ];
+
+        return view('paket/detail', $data);
+    }
+
+    // Halaman admin (yang sudah ada sebelumnya)
+    public function admin()
     {
         $data = [
             'title' => 'Kelola Paket Wisata',
@@ -250,7 +353,7 @@ class Paket extends BaseController
                 $this->paketModel->deleteFoto($paket['foto']);
             }
 
-            // Hapus data paket
+            // Hapus data paket secara permanen
             $this->paketModel->delete($id);
 
             return $this->response->setJSON([

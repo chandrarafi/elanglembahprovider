@@ -27,11 +27,49 @@
 
     <!-- Custom styles -->
     <style>
-        .hero-section {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('<?= base_url('assets/images/gallery/01.png') ?>');
+        .hero-slider {
+            position: relative;
+            height: 90vh;
+            overflow: hidden;
+        }
+
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
             background-size: cover;
             background-position: center;
-            height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-slide.active {
+            opacity: 1;
+            z-index: 1;
+        }
+
+        .slide-content {
+            text-align: center;
+            max-width: 800px;
+            padding: 0 20px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .kategori-card:hover {
@@ -39,11 +77,74 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
+        .paket-card {
+            border: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
         .paket-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 25px -3px rgba(0, 0, 0, 0.15);
+        }
+
+        .testimonial-card {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .destination-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            height: 350px;
+        }
+
+        .destination-card img {
+            transition: transform 0.5s ease;
+        }
+
+        .destination-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .destination-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+            padding: 30px 20px;
+        }
+
+        .slider-nav {
+            position: absolute;
+            z-index: 10;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .slider-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .slider-dot.active {
+            background-color: white;
+            transform: scale(1.2);
         }
     </style>
+
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css" />
 </head>
 
 <body class="bg-gray-50">
@@ -68,13 +169,13 @@
 
                 <div class="flex items-center space-x-4">
                     <?php if ($is_logged_in): ?>
-                        <div class="relative group">
-                            <button class="flex items-center space-x-2 text-gray-800 hover:text-primary">
+                        <div class="relative">
+                            <button id="userDropdownButton" class="flex items-center space-x-2 text-gray-800 hover:text-primary focus:outline-none">
                                 <img src="<?= base_url('assets/images/avatars/avatar-1.png') ?>" alt="User" class="w-8 h-8 rounded-full">
                                 <span class="font-medium"><?= $user['name'] ?></span>
                                 <i class="fas fa-chevron-down text-xs"></i>
                             </button>
-                            <div class="absolute right-0 w-48 mt-2 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">
+                            <div id="userDropdownMenu" class="absolute right-0 w-48 mt-2 bg-white rounded-md shadow-lg py-1 z-50 hidden">
                                 <a href="<?= base_url('profile') ?>" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
                                     <i class="fas fa-user mr-2"></i> Profil
                                 </a>
@@ -118,18 +219,88 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero-section flex items-center justify-center text-center">
+    <!-- Hero Section with Image Slider -->
+    <section class="hero-slider">
+        <div class="hero-slide active" style="background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('<?= base_url('assets/images/gallery/02.png') ?>')">
+            <div class="slide-content">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">Jelajahi Keajaiban Dunia</h1>
+                <p class="text-xl text-white mb-8 max-w-3xl mx-auto">Temukan destinasi wisata luar negeri terbaik dengan panorama alam menakjubkan dan petualangan tak terlupakan</p>
+                <div class="flex flex-col md:flex-row justify-center gap-4">
+                    <a href="<?= base_url('paket') ?>" class="bg-accent hover:bg-yellow-600 text-white py-3 px-8 rounded-md text-lg font-medium transition duration-300">
+                        Lihat Paket Wisata
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="hero-slide" style="background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('<?= base_url('assets/images/gallery/15.png') ?>')">
+            <div class="slide-content">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">Nikmati Keindahan Alam Luar Negeri</h1>
+                <p class="text-xl text-white mb-8 max-w-3xl mx-auto">Paket wisata eksklusif ke destinasi internasional dengan pengalaman premium yang dirancang khusus untuk Anda</p>
+                <div class="flex flex-col md:flex-row justify-center gap-4">
+                    <a href="<?= base_url('paket?kategori=2') ?>" class="bg-primary hover:bg-blue-800 text-white py-3 px-8 rounded-md text-lg font-medium transition duration-300">
+                        Lihat Destinasi
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="hero-slide" style="background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('<?= base_url('assets/images/gallery/09.png') ?>')">
+            <div class="slide-content">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">Petualangan Menakjubkan Menanti</h1>
+                <p class="text-xl text-white mb-8 max-w-3xl mx-auto">Rasakan sensasi menjelajahi keindahan alam luar negeri dengan layanan bintang lima dan harga terbaik</p>
+                <div class="flex flex-col md:flex-row justify-center gap-4">
+                    <a href="<?= base_url('kontak') ?>" class="bg-white hover:bg-gray-100 text-primary py-3 px-8 rounded-md text-lg font-medium transition duration-300">
+                        Hubungi Kami
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="slider-nav">
+            <div class="slider-dot active" onclick="showSlide(0)"></div>
+            <div class="slider-dot" onclick="showSlide(1)"></div>
+            <div class="slider-dot" onclick="showSlide(2)"></div>
+        </div>
+    </section>
+
+    <!-- Featured Destinations -->
+    <section class="py-16 bg-gradient-to-b from-blue-50 to-white">
         <div class="container mx-auto px-4">
-            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">Jelajahi Keindahan Indonesia</h1>
-            <p class="text-xl text-white mb-8 max-w-2xl mx-auto">Temukan destinasi wisata terbaik dengan paket perjalanan yang disesuaikan untuk pengalaman tak terlupakan</p>
-            <div class="flex flex-col md:flex-row justify-center gap-4">
-                <a href="<?= base_url('paket') ?>" class="bg-primary hover:bg-blue-800 text-white py-3 px-6 rounded-md text-lg font-medium transition duration-300">
-                    Lihat Paket Wisata
-                </a>
-                <a href="<?= base_url('kontak') ?>" class="bg-white hover:bg-gray-100 text-primary py-3 px-6 rounded-md text-lg font-medium transition duration-300">
-                    Hubungi Kami
-                </a>
+            <div class="text-center mb-12">
+                <span class="inline-block py-1 px-3 rounded bg-blue-100 text-primary text-sm font-medium mb-3">DESTINASI LUAR NEGERI</span>
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Destinasi Luar Negeri Menakjubkan</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Temukan keindahan panorama alam luar negeri yang akan membuat mata Anda terpukau</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <?php
+                $backgroundImages = [
+                    'assets/images/gallery/23.png', // Pegunungan
+                    'assets/images/gallery/25.png', // Pantai
+                    'assets/images/gallery/05.png', // Budaya
+                ];
+                $descriptions = [
+                    'Nikmati pemandangan alam yang memukau dan petualangan luar biasa di destinasi wisata ini',
+                    'Kunjungi tempat-tempat eksotis dengan keindahan panorama yang memesona',
+                    'Rasakan pesona budaya dan keindahan alam yang menakjubkan'
+                ];
+
+                foreach ($featured_destinations as $index => $destination):
+                    $imgIndex = $index % count($backgroundImages);
+                    $descIndex = $index % count($descriptions);
+                    $imageSrc = $destination['foto'] ? base_url('uploads/kategori/' . $destination['foto']) : base_url($backgroundImages[$imgIndex]);
+                ?>
+                    <div class="destination-card">
+                        <img src="<?= $imageSrc ?>" alt="<?= $destination['namakategori'] ?>" class="w-full h-full object-cover">
+                        <div class="destination-overlay">
+                            <h3 class="text-2xl font-bold text-white"><?= $destination['namakategori'] ?></h3>
+                            <p class="text-gray-200 mt-2"><?= $descriptions[$descIndex] ?></p>
+                            <a href="<?= base_url('paket?kategori=' . $destination['idkategori']) ?>" class="inline-flex items-center text-white mt-4 hover:text-accent transition duration-300">
+                                <span class="border-b border-white hover:border-accent">Jelajahi Sekarang</span>
+                                <i class="fas fa-arrow-right ml-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             </div>
         </div>
     </section>
@@ -138,24 +309,56 @@
     <section class="py-16 bg-white">
         <div class="container mx-auto px-4">
             <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-gray-800 mb-4">Kategori Wisata</h2>
-                <p class="text-gray-600 max-w-2xl mx-auto">Pilih kategori wisata yang sesuai dengan keinginan Anda</p>
+                <span class="inline-block py-1 px-3 rounded bg-blue-100 text-primary text-sm font-medium mb-3">JENIS WISATA</span>
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Pilihan Kategori Wisata</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Temukan berbagai jenis wisata luar negeri sesuai dengan preferensi perjalanan Anda</p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <?php foreach ($kategori as $kat): ?>
-                    <div class="kategori-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300">
-                        <div class="h-48 overflow-hidden">
+                <?php foreach ($kategori as $index => $kat): ?>
+                    <div class="kategori-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300 border border-gray-100">
+                        <div class="h-52 overflow-hidden">
                             <?php if ($kat['foto']): ?>
-                                <img src="<?= base_url('uploads/kategori/' . $kat['foto']) ?>" alt="<?= $kat['namakategori'] ?>" class="w-full h-full object-cover">
+                                <img src="<?= base_url('uploads/kategori/' . $kat['foto']) ?>" alt="<?= $kat['namakategori'] ?>" class="w-full h-full object-cover hover:scale-105 transition duration-700">
                             <?php else: ?>
-                                <img src="<?= base_url('assets/images/gallery/0' . (($loop ?? 0) % 9 + 1) . '.png') ?>" alt="<?= $kat['namakategori'] ?>" class="w-full h-full object-cover">
+                                <?php
+                                $backgroundImages = [
+                                    'assets/images/gallery/02.png', // Pegunungan
+                                    'assets/images/gallery/15.png', // Pantai
+                                    'assets/images/gallery/25.png', // Kota
+                                    'assets/images/gallery/05.png', // Budaya
+                                    'assets/images/gallery/03.png', // Adventure
+                                    'assets/images/gallery/09.png', // Kuliner
+                                    'assets/images/gallery/23.png', // Alam Liar
+                                    'assets/images/gallery/16.png', // Sejarah
+                                ];
+                                $imgIndex = $index % count($backgroundImages);
+                                ?>
+                                <img src="<?= base_url($backgroundImages[$imgIndex]) ?>" alt="<?= $kat['namakategori'] ?>" class="w-full h-full object-cover hover:scale-105 transition duration-700">
                             <?php endif; ?>
                         </div>
-                        <div class="p-4">
-                            <h3 class="text-xl font-semibold text-gray-800 mb-2"><?= $kat['namakategori'] ?></h3>
-                            <a href="<?= base_url('paket?kategori=' . $kat['idkategori']) ?>" class="text-primary hover:text-blue-700 font-medium flex items-center">
-                                Lihat Paket <i class="fas fa-arrow-right ml-2"></i>
+                        <div class="p-5">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-3"><?= $kat['namakategori'] ?></h3>
+                            <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+                                <?php
+                                // Deskripsi default jika tidak ada deskripsi dari database
+                                $descriptions = [
+                                    'Nikmati pemandangan alam yang memukau',
+                                    'Rasakan sensasi liburan mewah',
+                                    'Jelajahi budaya unik dan menarik',
+                                    'Petualangan seru menanti Anda',
+                                    'Nikmati pengalaman baru yang menakjubkan',
+                                    'Temukan destinasi eksotis pilihan',
+                                    'Kunjungi tempat-tempat ikonik dunia',
+                                    'Eksplorasi keajaiban alam luar biasa'
+                                ];
+
+                                // Tambahkan logika untuk mengambil deskripsi dari database jika nanti ada
+                                echo $descriptions[$index % count($descriptions)];
+                                ?>
+                            </p>
+                            <a href="<?= base_url('paket?kategori=' . $kat['idkategori']) ?>" class="inline-block bg-primary hover:bg-blue-700 text-white py-2 px-4 rounded-md text-sm font-medium transition duration-300 flex items-center justify-center">
+                                <span>Lihat Paket</span> <i class="fas fa-arrow-right ml-2"></i>
                             </a>
                         </div>
                     </div>
@@ -165,88 +368,180 @@
     </section>
 
     <!-- Paket Populer Section -->
-    <section class="py-16 bg-gray-50">
+    <section class="py-20 bg-gray-50">
         <div class="container mx-auto px-4">
             <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-gray-800 mb-4">Paket Wisata Populer</h2>
-                <p class="text-gray-600 max-w-2xl mx-auto">Temukan paket wisata terbaik dan terpopuler dari kami</p>
+                <span class="inline-block py-1 px-3 rounded bg-yellow-100 text-accent text-sm font-medium mb-3">PAKET TERPOPULER</span>
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Paket Wisata Internasional Terpopuler</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Jelajahi keindahan alam luar negeri dengan paket terbaik pilihan wisatawan kami</p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 <?php foreach ($paket_populer as $index => $paket): ?>
-                    <div class="paket-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300">
-                        <div class="h-56 overflow-hidden">
-                            <?php if ($paket['foto']): ?>
-                                <img src="<?= base_url('uploads/paket/' . $paket['foto']) ?>" alt="<?= $paket['namapaket'] ?>" class="w-full h-full object-cover">
-                            <?php else: ?>
-                                <img src="<?= base_url('assets/images/gallery/0' . (($index % 9) + 1) . '.png') ?>" alt="<?= $paket['namapaket'] ?>" class="w-full h-full object-cover">
-                            <?php endif; ?>
+                    <div class="paket-card rounded-xl overflow-hidden group">
+                        <div class="h-64 overflow-hidden relative">
+                            <?php
+                            $popularImages = [
+                                'assets/images/gallery/03.png',
+                                'assets/images/gallery/15.png',
+                                'assets/images/gallery/25.png',
+                                'assets/images/gallery/09.png',
+                                'assets/images/gallery/23.png',
+                                'assets/images/gallery/05.png',
+                            ];
+                            $imgIndex = $index % count($popularImages);
+                            $image = $paket['foto'] ? base_url('uploads/paket/' . $paket['foto']) : base_url($popularImages[$imgIndex]);
+                            ?>
+                            <img src="<?= $image ?>" alt="<?= $paket['namapaket'] ?>" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-700">
+                            <div class="absolute top-4 right-4">
+                                <span class="bg-accent/90 text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                                    POPULER
+                                </span>
+                            </div>
+                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                                <div class="flex items-center text-white">
+                                    <i class="fas fa-map-marker-alt mr-2 text-accent"></i>
+                                    <span class="text-sm font-medium"><?= $paket['kategori_nama'] ?? 'Destinasi Wisata' ?></span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="p-5">
+                        <div class="p-6 bg-white">
                             <div class="flex justify-between items-center mb-3">
                                 <span class="bg-blue-100 text-primary text-xs font-medium px-2.5 py-0.5 rounded">
-                                    <?php
-                                    $kategoriName = '';
-                                    foreach ($kategori as $kat) {
-                                        if ($kat['idkategori'] === $paket['idkategori']) {
-                                            $kategoriName = $kat['namakategori'];
-                                            break;
-                                        }
-                                    }
-                                    echo $kategoriName;
-                                    ?>
+                                    <?= $paket['kategori_nama'] ?? 'Umum' ?>
                                 </span>
-                                <span class="text-accent font-bold">Rp <?= number_format($paket['harga'], 0, ',', '.') ?></span>
+                                <div class="flex items-center">
+                                    <i class="fas fa-star text-yellow-400 mr-1"></i>
+                                    <span class="text-gray-700 text-sm font-medium"><?= number_format(4 + (mt_rand(0, 10) / 10), 1) ?></span>
+                                </div>
                             </div>
                             <h3 class="text-xl font-bold text-gray-800 mb-3"><?= $paket['namapaket'] ?></h3>
-                            <p class="text-gray-600 mb-4 line-clamp-2"><?= $paket['deskripsi'] ?? 'Nikmati perjalanan wisata dengan paket yang telah kami siapkan untuk pengalaman terbaik Anda.' ?></p>
-                            <a href="<?= base_url('paket/detail/' . $paket['idpaket']) ?>" class="inline-block bg-primary hover:bg-blue-800 text-white py-2 px-4 rounded-md transition duration-300">
-                                Lihat Detail
-                            </a>
+                            <p class="text-gray-600 mb-4 line-clamp-2"><?= $paket['deskripsi'] ?? 'Nikmati keindahan panorama alam luar negeri dengan pengalaman yang tak akan terlupakan.' ?></p>
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <span class="block text-sm text-gray-500">Mulai dari</span>
+                                    <span class="text-accent text-xl font-bold">Rp <?= number_format($paket['harga'], 0, ',', '.') ?></span>
+                                </div>
+                                <a href="<?= base_url('paket/detail/' . $paket['idpaket']) ?>" class="inline-block bg-primary hover:bg-blue-700 text-white py-2.5 px-5 rounded-lg transition duration-300">
+                                    Lihat Detail
+                                </a>
+                            </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
             </div>
 
-            <div class="text-center mt-10">
-                <a href="<?= base_url('paket') ?>" class="inline-flex items-center bg-white border-2 border-primary hover:bg-primary hover:text-white text-primary font-medium py-2 px-6 rounded-md transition duration-300">
+            <div class="text-center mt-12">
+                <a href="<?= base_url('paket') ?>" class="inline-flex items-center bg-white border-2 border-primary hover:bg-primary hover:text-white text-primary font-medium py-3 px-8 rounded-lg transition duration-300">
                     Lihat Semua Paket <i class="fas fa-arrow-right ml-2"></i>
                 </a>
             </div>
         </div>
     </section>
 
-    <!-- Paket Terbaru Section -->
-    <section class="py-16 bg-white">
+    <!-- Testimoni Section -->
+    <section class="py-16 bg-gradient-to-b from-white to-blue-50">
         <div class="container mx-auto px-4">
             <div class="text-center mb-12">
+                <span class="inline-block py-1 px-3 rounded bg-blue-100 text-primary text-sm font-medium mb-3">TESTIMONI</span>
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Apa Kata Mereka</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Pengalaman tak terlupakan dari pelanggan yang telah menikmati paket wisata luar negeri kami</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="testimonial-card">
+                    <div class="flex items-center mb-4">
+                        <img src="<?= base_url('assets/images/avatars/avatar-1.png') ?>" alt="User" class="w-12 h-12 rounded-full object-cover mr-4">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Budi Santoso</h4>
+                            <div class="flex text-yellow-400 mt-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 italic">"Perjalanan ke Pegunungan Alpen Swiss benar-benar luar biasa! Pemandangan alamnya menakjubkan dan pelayanan tour guide sangat profesional. Saya dan keluarga sangat puas dengan paket wisata ini."</p>
+                    <div class="mt-4 text-sm text-primary font-medium">Swiss Alps Tour</div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="flex items-center mb-4">
+                        <img src="<?= base_url('assets/images/avatars/avatar-1.png') ?>" alt="User" class="w-12 h-12 rounded-full object-cover mr-4">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Dewi Anggraini</h4>
+                            <div class="flex text-yellow-400 mt-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 italic">"Santorini memang seindah yang saya bayangkan! Sunset di Oia benar-benar memukau. Elang Lembah Travel menyiapkan pengalaman yang tak terlupakan dengan hotel dan restoran pilihan terbaik."</p>
+                    <div class="mt-4 text-sm text-primary font-medium">Santorini Island Getaway</div>
+                </div>
+
+                <div class="testimonial-card">
+                    <div class="flex items-center mb-4">
+                        <img src="<?= base_url('assets/images/avatars/avatar-1.png') ?>" alt="User" class="w-12 h-12 rounded-full object-cover mr-4">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Ahmad Faisal</h4>
+                            <div class="flex text-yellow-400 mt-1">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 italic">"Tour Kyoto di musim semi adalah keputusan terbaik! Melihat bunga sakura bermekaran dan mengunjungi kuil-kuil kuno memberi pengalaman budaya yang mendalam. Sangat direkomendasikan!"</p>
+                    <div class="mt-4 text-sm text-primary font-medium">Japan Spring Exploration</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Paket Terbaru Section -->
+    <section class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <span class="inline-block py-1 px-3 rounded bg-green-100 text-green-600 text-sm font-medium mb-3">BARU DITAMBAHKAN</span>
                 <h2 class="text-3xl font-bold text-gray-800 mb-4">Paket Wisata Terbaru</h2>
-                <p class="text-gray-600 max-w-2xl mx-auto">Jelajahi paket wisata terbaru yang kami tawarkan</p>
+                <p class="text-gray-600 max-w-2xl mx-auto">Jelajahi destinasi luar negeri dengan paket wisata terbaru yang kami tawarkan</p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <?php foreach ($paket_terbaru as $index => $paket): ?>
-                    <div class="paket-card bg-white rounded-lg overflow-hidden shadow-md transition duration-300 border border-gray-200">
-                        <div class="h-56 overflow-hidden">
-                            <?php if ($paket['foto']): ?>
-                                <img src="<?= base_url('uploads/paket/' . $paket['foto']) ?>" alt="<?= $paket['namapaket'] ?>" class="w-full h-full object-cover">
-                            <?php else: ?>
-                                <img src="<?= base_url('assets/images/gallery/0' . (($index % 9) + 1) . '.png') ?>" alt="<?= $paket['namapaket'] ?>" class="w-full h-full object-cover">
-                            <?php endif; ?>
+                    <div class="paket-card bg-white rounded-xl overflow-hidden shadow-lg transition duration-300 border border-gray-100">
+                        <div class="h-60 overflow-hidden relative">
+                            <?php
+                            $newImages = [
+                                'assets/images/gallery/35.png',
+                                'assets/images/gallery/16.png',
+                                'assets/images/gallery/14.png',
+                                'assets/images/gallery/36.png',
+                                'assets/images/gallery/37.png',
+                                'assets/images/gallery/08.png',
+                            ];
+                            $imgIndex = $index % count($newImages);
+                            $image = $paket['foto'] ? base_url('uploads/paket/' . $paket['foto']) : base_url($newImages[$imgIndex]);
+                            ?>
+                            <img src="<?= $image ?>" alt="<?= $paket['namapaket'] ?>" class="w-full h-full object-cover transform hover:scale-105 transition duration-700">
+                            <div class="absolute top-4 left-4">
+                                <span class="bg-green-500/90 text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                                    NEW
+                                </span>
+                            </div>
                         </div>
-                        <div class="p-5">
+                        <div class="p-6">
                             <div class="flex justify-between items-center mb-3">
                                 <span class="bg-blue-100 text-primary text-xs font-medium px-2.5 py-0.5 rounded">
-                                    <?php
-                                    $kategoriName = '';
-                                    foreach ($kategori as $kat) {
-                                        if ($kat['idkategori'] === $paket['idkategori']) {
-                                            $kategoriName = $kat['namakategori'];
-                                            break;
-                                        }
-                                    }
-                                    echo $kategoriName;
-                                    ?>
+                                    <?= $paket['kategori_nama'] ?? 'Umum' ?>
                                 </span>
                                 <span class="text-accent font-bold">Rp <?= number_format($paket['harga'], 0, ',', '.') ?></span>
                             </div>
@@ -263,15 +558,16 @@
     </section>
 
     <!-- Call to Action -->
-    <section class="py-16 bg-primary">
-        <div class="container mx-auto px-4 text-center">
-            <h2 class="text-3xl font-bold text-white mb-6">Siap Untuk Berpetualang?</h2>
-            <p class="text-white text-lg mb-8 max-w-2xl mx-auto">Bergabunglah dengan ribuan wisatawan yang telah mempercayai kami untuk perjalanan wisata mereka</p>
+    <section class="py-20 bg-primary relative overflow-hidden">
+        <div class="absolute inset-0 opacity-20" style="background-image: url('<?= base_url('assets/images/gallery/15.png') ?>'); background-size: cover; background-position: center; background-blend-mode: overlay;"></div>
+        <div class="container mx-auto px-4 text-center relative z-10">
+            <h2 class="text-4xl font-bold text-white mb-6">Siap Menjelajahi Keajaiban Dunia?</h2>
+            <p class="text-white text-lg mb-8 max-w-3xl mx-auto">Dapatkan pengalaman wisata luar negeri yang menakjubkan dengan panorama alam menawan, pelayanan premium, dan harga terbaik hanya di Elang Lembah Travel</p>
             <div class="flex flex-col md:flex-row justify-center gap-4">
-                <a href="<?= base_url('auth/register') ?>" class="bg-white hover:bg-gray-100 text-primary py-3 px-6 rounded-md text-lg font-medium transition duration-300">
-                    Daftar Sekarang
+                <a href="<?= base_url('paket') ?>" class="bg-white hover:bg-gray-100 text-primary py-3 px-8 rounded-lg text-lg font-medium transition duration-300">
+                    Lihat Semua Paket
                 </a>
-                <a href="<?= base_url('kontak') ?>" class="bg-transparent hover:bg-blue-800 border-2 border-white text-white py-3 px-6 rounded-md text-lg font-medium transition duration-300">
+                <a href="<?= base_url('kontak') ?>" class="bg-accent hover:bg-yellow-600 text-white py-3 px-8 rounded-lg text-lg font-medium transition duration-300">
                     Hubungi Kami
                 </a>
             </div>
@@ -341,9 +637,60 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Mobile menu toggle
-        document.getElementById('mobile-menu-button').addEventListener('click', function() {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu toggle
+            document.getElementById('mobile-menu-button').addEventListener('click', function() {
+                document.getElementById('mobile-menu').classList.toggle('hidden');
+            });
+
+            // User dropdown toggle
+            const userDropdownButton = document.getElementById('userDropdownButton');
+            const userDropdownMenu = document.getElementById('userDropdownMenu');
+
+            if (userDropdownButton && userDropdownMenu) {
+                userDropdownButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    userDropdownMenu.classList.toggle('hidden');
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!userDropdownMenu.contains(e.target) && !userDropdownButton.contains(e.target)) {
+                        userDropdownMenu.classList.add('hidden');
+                    }
+                });
+            }
+
+            // Hero Slider
+            let currentSlide = 0;
+            const slides = document.querySelectorAll('.hero-slide');
+            const dots = document.querySelectorAll('.slider-dot');
+            const totalSlides = slides.length;
+
+            function showSlide(n) {
+                // Hide all slides
+                slides.forEach(slide => {
+                    slide.classList.remove('active');
+                });
+
+                // Remove active from all dots
+                dots.forEach(dot => {
+                    dot.classList.remove('active');
+                });
+
+                // Show the selected slide
+                currentSlide = (n + totalSlides) % totalSlides;
+                slides[currentSlide].classList.add('active');
+                dots[currentSlide].classList.add('active');
+            }
+
+            // Auto slide
+            setInterval(() => {
+                showSlide(currentSlide + 1);
+            }, 5000);
+
+            // Make the showSlide function accessible globally
+            window.showSlide = showSlide;
         });
 
         // Logout confirmation

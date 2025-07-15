@@ -76,7 +76,7 @@ class Filters extends BaseFilters
             // 'honeypot',
             // 'csrf',
             // 'invalidchars',
-            'auth', // Tambahkan auth filter secara global
+            // Hapus auth filter dari global
         ],
         'after' => [
             // 'honeypot',
@@ -108,5 +108,15 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        'auth' => [
+            'before' => [
+                'admin/*',
+                'profile/*',
+                'booking/*',
+                'laporan/*',
+                // Tambahkan rute lain yang memerlukan autentikasi
+            ],
+        ],
+    ];
 }

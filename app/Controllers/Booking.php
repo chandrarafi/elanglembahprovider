@@ -2,112 +2,40 @@
 
 namespace App\Controllers;
 
-use App\Controllers\BaseController;
-use App\Models\UserModel;
 use App\Models\PaketWisataModel;
-use CodeIgniter\HTTP\ResponseInterface;
+use App\Models\PemesananModel;
+use App\Models\PembayaranModel;
+use App\Models\KategoriModel;
+use App\Models\UserModel;
 
 class Booking extends BaseController
 {
-    protected $userModel;
     protected $paketModel;
+    protected $pemesananModel;
+    protected $pembayaranModel;
+    protected $kategoriModel;
+    protected $userModel;
 
     public function __construct()
     {
-        $this->userModel = new UserModel();
         $this->paketModel = new PaketWisataModel();
+        $this->pemesananModel = new PemesananModel();
+        $this->pembayaranModel = new PembayaranModel();
+        $this->kategoriModel = new KategoriModel();
+        $this->userModel = new UserModel();
     }
 
-    public function history()
+    public function create($id_paket)
     {
-        // Cek apakah user sudah login
-        if (!session()->get('logged_in')) {
-            return redirect()->to('auth')->with('error', 'Silakan login terlebih dahulu');
-        }
-
-        $userId = session()->get('user_id');
-        $user = $this->userModel->find($userId);
-
-        if (!$user) {
-            return redirect()->to('/')->with('error', 'User tidak ditemukan');
-        }
-
-        // Untuk sementara, kita gunakan array kosong karena belum ada model BookingModel
-        $bookings = [];
-
-        $data = [
-            'title' => 'Riwayat Pemesanan - Elang Lembah Travel',
-            'user' => $user,
-            'bookings' => $bookings,
-            'is_logged_in' => true,
-            'user_data' => [
-                'name' => session()->get('name'),
-                'role' => session()->get('role')
-            ]
-        ];
-
-        return view('booking/history', $data);
-    }
-
-    public function detail($id)
-    {
-        // Cek apakah user sudah login
-        if (!session()->get('logged_in')) {
-            return redirect()->to('auth')->with('error', 'Silakan login terlebih dahulu');
-        }
-
-        $userId = session()->get('user_id');
-
-        // Untuk sementara, kita gunakan array kosong karena belum ada model BookingModel
-        $booking = [
-            'id' => $id,
-            'booking_code' => 'BK' . str_pad($id, 6, '0', STR_PAD_LEFT),
-            'user_id' => $userId,
-            'paket_id' => 'PKT001',
-            'paket_name' => 'Paket Wisata Bali 3 Hari 2 Malam',
-            'booking_date' => date('Y-m-d'),
-            'travel_date' => date('Y-m-d', strtotime('+1 month')),
-            'jumlah_peserta' => 2,
-            'total_harga' => 5000000,
-            'status' => 'pending',
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s')
-        ];
-
-        $data = [
-            'title' => 'Detail Pemesanan - Elang Lembah Travel',
-            'booking' => $booking,
-            'is_logged_in' => true,
-            'user_data' => [
-                'name' => session()->get('name'),
-                'role' => session()->get('role')
-            ]
-        ];
-
-        return view('booking/detail', $data);
-    }
-
-    public function create($paketId)
-    {
-        // Cek apakah user sudah login
-        if (!session()->get('logged_in')) {
-            return redirect()->to('auth')->with('error', 'Silakan login terlebih dahulu');
-        }
-
-        $paket = $this->paketModel->find($paketId);
-
+        $paket = $this->paketModel->find($id_paket);
         if (!$paket) {
-            return redirect()->to('/paket')->with('error', 'Paket wisata tidak ditemukan');
+            return redirect()->to('/paket')->with('error', 'Paket tidak ditemukan');
         }
 
         $data = [
-            'title' => 'Pesan Paket Wisata - Elang Lembah Travel',
+            'title' => 'Pemesanan Paket',
             'paket' => $paket,
-            'is_logged_in' => true,
-            'user_data' => [
-                'name' => session()->get('name'),
-                'role' => session()->get('role')
-            ]
+            'kategori' => $this->kategoriModel->findAll(),
         ];
 
         return view('booking/create', $data);
@@ -115,42 +43,137 @@ class Booking extends BaseController
 
     public function store()
     {
-        // Cek apakah user sudah login
-        if (!session()->get('logged_in')) {
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'Silakan login terlebih dahulu'
-            ])->setStatusCode(401);
+        $id_paket = $this->request->getPost('id_paket');
+        $paket = $this->paketModel->find($id_paket);
+        if (!$paket) {
+            return redirect()->to('/paket')->with('error', 'Paket tidak ditemukan');
         }
 
-        $userId = session()->get('user_id');
-        $data = $this->request->getPost();
+        // Generate kode pemesanan
+        $kode_pemesanan = 'ELP' . date('Ymd') . rand(1000, 9999);
 
-        // Untuk sementara, kita hanya mengembalikan respons sukses
-        return $this->response->setJSON([
-            'status' => 'success',
-            'message' => 'Pemesanan berhasil dibuat',
-            'redirect' => base_url('booking/history')
-        ]);
+        // Hitung total harga
+        $total_harga = $paket['harga'];
+
+        // Simpan data pemesanan
+        $data_pemesanan = [
+            'id_paket' => $id_paket,
+            'id_user' => session()->get('id'),
+            'kode_pemesanan' => $kode_pemesanan,
+            'nama_pemesan' => $this->request->getPost('nama_pemesan'),
+            'email_pemesan' => $this->request->getPost('email_pemesan'),
+            'telp_pemesan' => $this->request->getPost('telp_pemesan'),
+            'tgl_pemesanan' => date('Y-m-d'),
+            'tgl_berangkat' => $this->request->getPost('tgl_berangkat'),
+            'total_harga' => $total_harga,
+            'status' => 'pending'
+        ];
+
+        $this->pemesananModel->insert($data_pemesanan);
+        $id_pemesanan = $this->pemesananModel->getInsertID();
+
+        return redirect()->to('/booking/detail/' . $id_pemesanan)->with('success', 'Pemesanan berhasil dibuat');
     }
 
-    public function cancel($id)
+    public function detail($id_pemesanan)
     {
-        // Cek apakah user sudah login
-        if (!session()->get('logged_in')) {
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'Silakan login terlebih dahulu'
-            ])->setStatusCode(401);
+        $pemesanan = $this->pemesananModel->find($id_pemesanan);
+        if (!$pemesanan || $pemesanan['id_user'] != session()->get('id')) {
+            return redirect()->to('/booking/history')->with('error', 'Pemesanan tidak ditemukan');
         }
 
-        $userId = session()->get('user_id');
+        $paket = $this->paketModel->find($pemesanan['id_paket']);
+        $pembayaran = $this->pembayaranModel->where('id_pemesanan', $id_pemesanan)->first();
 
-        // Untuk sementara, kita hanya mengembalikan respons sukses
-        return $this->response->setJSON([
-            'status' => 'success',
-            'message' => 'Pemesanan berhasil dibatalkan',
-            'redirect' => base_url('booking/history')
-        ]);
+        $data = [
+            'title' => 'Detail Pemesanan',
+            'pemesanan' => $pemesanan,
+            'paket' => $paket,
+            'pembayaran' => $pembayaran,
+            'kategori' => $this->kategoriModel->findAll(),
+        ];
+
+        return view('booking/detail', $data);
+    }
+
+    public function history()
+    {
+        $pemesanan = $this->pemesananModel->where('id_user', session()->get('id'))->findAll();
+
+        $data_pemesanan = [];
+        foreach ($pemesanan as $p) {
+            $paket = $this->paketModel->find($p['id_paket']);
+            $p['paket'] = $paket;
+            $data_pemesanan[] = $p;
+        }
+
+        $data = [
+            'title' => 'Riwayat Pemesanan',
+            'pemesanan' => $data_pemesanan,
+            'kategori' => $this->kategoriModel->findAll(),
+        ];
+
+        return view('booking/history', $data);
+    }
+
+    public function cancel($id_pemesanan)
+    {
+        $pemesanan = $this->pemesananModel->find($id_pemesanan);
+        if (!$pemesanan || $pemesanan['id_user'] != session()->get('id')) {
+            return redirect()->to('/booking/history')->with('error', 'Pemesanan tidak ditemukan');
+        }
+
+        $this->pemesananModel->update($id_pemesanan, ['status' => 'cancelled']);
+        return redirect()->to('/booking/history')->with('success', 'Pemesanan berhasil dibatalkan');
+    }
+
+    public function payment($id_pemesanan)
+    {
+        $pemesanan = $this->pemesananModel->find($id_pemesanan);
+        if (!$pemesanan || $pemesanan['id_user'] != session()->get('id') || $pemesanan['status'] != 'pending') {
+            return redirect()->to('/booking/history')->with('error', 'Pemesanan tidak valid untuk pembayaran');
+        }
+
+        $paket = $this->paketModel->find($pemesanan['id_paket']);
+
+        $data = [
+            'title' => 'Pembayaran',
+            'pemesanan' => $pemesanan,
+            'paket' => $paket,
+            'kategori' => $this->kategoriModel->findAll(),
+        ];
+
+        return view('booking/payment', $data);
+    }
+
+    public function savePayment()
+    {
+        $id_pemesanan = $this->request->getPost('id_pemesanan');
+        $pemesanan = $this->pemesananModel->find($id_pemesanan);
+        if (!$pemesanan || $pemesanan['id_user'] != session()->get('id')) {
+            return redirect()->to('/booking/history')->with('error', 'Pemesanan tidak ditemukan');
+        }
+
+        $bukti_pembayaran = $this->request->getFile('bukti_pembayaran');
+        if (!$bukti_pembayaran->isValid()) {
+            return redirect()->to('/booking/payment/' . $id_pemesanan)->with('error', 'Bukti pembayaran tidak valid');
+        }
+
+        $newName = $pemesanan['kode_pemesanan'] . '.' . $bukti_pembayaran->getExtension();
+        $bukti_pembayaran->move(ROOTPATH . 'public/uploads/payments', $newName);
+
+        $data_pembayaran = [
+            'id_pemesanan' => $id_pemesanan,
+            'metode_pembayaran' => $this->request->getPost('metode_pembayaran'),
+            'jumlah_pembayaran' => $pemesanan['total_harga'],
+            'tanggal_pembayaran' => date('Y-m-d'),
+            'bukti_pembayaran' => $newName,
+            'status' => 'pending'
+        ];
+
+        $this->pembayaranModel->insert($data_pembayaran);
+        $this->pemesananModel->update($id_pemesanan, ['status' => 'waiting_confirmation']);
+
+        return redirect()->to('/booking/detail/' . $id_pemesanan)->with('success', 'Pembayaran berhasil diupload');
     }
 }

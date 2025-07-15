@@ -4,18 +4,51 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Models\KategoriModel;
+use App\Models\PaketWisataModel;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class Kategori extends BaseController
 {
     protected $kategoriModel;
+    protected $paketModel;
 
     public function __construct()
     {
         $this->kategoriModel = new KategoriModel();
+        $this->paketModel = new PaketWisataModel();
     }
 
+    // Halaman publik kategori
     public function index()
+    {
+        // Ambil semua kategori aktif
+        $kategori = $this->kategoriModel->where('status', 'active')->findAll();
+
+        // Untuk setiap kategori, ambil jumlah paket yang tersedia
+        foreach ($kategori as $key => $kat) {
+            $paketCount = $this->paketModel
+                ->where('idkategori', $kat['idkategori'])
+                ->where('statuspaket', 'active')
+                ->countAllResults();
+
+            $kategori[$key]['paket_count'] = $paketCount;
+        }
+
+        $data = [
+            'title' => 'Kategori Wisata - Elang Lembah Travel',
+            'kategori' => $kategori,
+            'is_logged_in' => session()->get('logged_in') ?? false,
+            'user' => [
+                'name' => session()->get('name') ?? '',
+                'role' => session()->get('role') ?? ''
+            ]
+        ];
+
+        return view('kategori/index', $data);
+    }
+
+    // Halaman admin kategori
+    public function admin()
     {
         return view('admin/kategori/index');
     }
