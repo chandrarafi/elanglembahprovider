@@ -23,7 +23,10 @@ class UserModel extends Model
         'address',
         'last_login',
         'last_page_visited',
-        'remember_token'
+        'remember_token',
+        'otp',
+        'otp_expiry',
+        'email_verified'
     ];
 
     protected $useTimestamps = true;

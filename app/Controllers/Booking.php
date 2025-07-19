@@ -50,22 +50,20 @@ class Booking extends BaseController
         }
 
         // Generate kode pemesanan
-        $kode_pemesanan = 'ELP' . date('Ymd') . rand(1000, 9999);
+        $kode_booking = 'ELP' . date('Ymd') . rand(1000, 9999);
 
         // Hitung total harga
         $total_harga = $paket['harga'];
 
         // Simpan data pemesanan
         $data_pemesanan = [
-            'id_paket' => $id_paket,
-            'id_user' => session()->get('id'),
-            'kode_pemesanan' => $kode_pemesanan,
-            'nama_pemesan' => $this->request->getPost('nama_pemesan'),
-            'email_pemesan' => $this->request->getPost('email_pemesan'),
-            'telp_pemesan' => $this->request->getPost('telp_pemesan'),
-            'tgl_pemesanan' => date('Y-m-d'),
+            'idpaket' => $id_paket,
+            'iduser' => session()->get('user_id'),
+            'kode_booking' => $kode_booking,
+            'tanggal' => date('Y-m-d H:i:s'),
             'tgl_berangkat' => $this->request->getPost('tgl_berangkat'),
-            'total_harga' => $total_harga,
+            'harga' => $paket['harga'],
+            'totalbiaya' => $total_harga,
             'status' => 'pending'
         ];
 
@@ -78,12 +76,12 @@ class Booking extends BaseController
     public function detail($id_pemesanan)
     {
         $pemesanan = $this->pemesananModel->find($id_pemesanan);
-        if (!$pemesanan || $pemesanan['id_user'] != session()->get('id')) {
+        if (!$pemesanan || $pemesanan['iduser'] != session()->get('user_id')) {
             return redirect()->to('/booking/history')->with('error', 'Pemesanan tidak ditemukan');
         }
 
-        $paket = $this->paketModel->find($pemesanan['id_paket']);
-        $pembayaran = $this->pembayaranModel->where('id_pemesanan', $id_pemesanan)->first();
+        $paket = $this->paketModel->find($pemesanan['idpaket']);
+        $pembayaran = $this->pembayaranModel->where('idpesan', $id_pemesanan)->first();
 
         $data = [
             'title' => 'Detail Pemesanan',
@@ -98,11 +96,11 @@ class Booking extends BaseController
 
     public function history()
     {
-        $pemesanan = $this->pemesananModel->where('id_user', session()->get('id'))->findAll();
+        $pemesanan = $this->pemesananModel->where('iduser', session()->get('user_id'))->findAll();
 
         $data_pemesanan = [];
         foreach ($pemesanan as $p) {
-            $paket = $this->paketModel->find($p['id_paket']);
+            $paket = $this->paketModel->find($p['idpaket']);
             $p['paket'] = $paket;
             $data_pemesanan[] = $p;
         }
@@ -119,7 +117,7 @@ class Booking extends BaseController
     public function cancel($id_pemesanan)
     {
         $pemesanan = $this->pemesananModel->find($id_pemesanan);
-        if (!$pemesanan || $pemesanan['id_user'] != session()->get('id')) {
+        if (!$pemesanan || $pemesanan['iduser'] != session()->get('user_id')) {
             return redirect()->to('/booking/history')->with('error', 'Pemesanan tidak ditemukan');
         }
 
@@ -130,11 +128,11 @@ class Booking extends BaseController
     public function payment($id_pemesanan)
     {
         $pemesanan = $this->pemesananModel->find($id_pemesanan);
-        if (!$pemesanan || $pemesanan['id_user'] != session()->get('id') || $pemesanan['status'] != 'pending') {
+        if (!$pemesanan || $pemesanan['iduser'] != session()->get('user_id') || $pemesanan['status'] != 'pending') {
             return redirect()->to('/booking/history')->with('error', 'Pemesanan tidak valid untuk pembayaran');
         }
 
-        $paket = $this->paketModel->find($pemesanan['id_paket']);
+        $paket = $this->paketModel->find($pemesanan['idpaket']);
 
         $data = [
             'title' => 'Pembayaran',
@@ -148,9 +146,9 @@ class Booking extends BaseController
 
     public function savePayment()
     {
-        $id_pemesanan = $this->request->getPost('id_pemesanan');
+        $id_pemesanan = $this->request->getPost('idpesan');
         $pemesanan = $this->pemesananModel->find($id_pemesanan);
-        if (!$pemesanan || $pemesanan['id_user'] != session()->get('id')) {
+        if (!$pemesanan || $pemesanan['iduser'] != session()->get('user_id')) {
             return redirect()->to('/booking/history')->with('error', 'Pemesanan tidak ditemukan');
         }
 
@@ -159,16 +157,16 @@ class Booking extends BaseController
             return redirect()->to('/booking/payment/' . $id_pemesanan)->with('error', 'Bukti pembayaran tidak valid');
         }
 
-        $newName = $pemesanan['kode_pemesanan'] . '.' . $bukti_pembayaran->getExtension();
+        $newName = $pemesanan['kode_booking'] . '.' . $bukti_pembayaran->getExtension();
         $bukti_pembayaran->move(ROOTPATH . 'public/uploads/payments', $newName);
 
         $data_pembayaran = [
-            'id_pemesanan' => $id_pemesanan,
+            'idpesan' => $id_pemesanan,
+            'tanggal_bayar' => date('Y-m-d H:i:s'),
+            'jumlah_bayar' => $pemesanan['totalbiaya'],
             'metode_pembayaran' => $this->request->getPost('metode_pembayaran'),
-            'jumlah_pembayaran' => $pemesanan['total_harga'],
-            'tanggal_pembayaran' => date('Y-m-d'),
-            'bukti_pembayaran' => $newName,
-            'status' => 'pending'
+            'bukti_bayar' => $newName,
+            'status_pembayaran' => 'pending'
         ];
 
         $this->pembayaranModel->insert($data_pembayaran);

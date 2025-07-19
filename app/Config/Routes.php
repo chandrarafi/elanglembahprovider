@@ -87,3 +87,10 @@ $routes->group('admin', ['filter' => ['auth', 'role:admin']], function ($routes)
     $routes->get('pemesanan/create', 'Admin\Pemesanan::create');
     $routes->post('pemesanan/store', 'Admin\Pemesanan::store');
 });
+
+// Tambahkan routes berikut
+$routes->get('register', 'Register::index');
+$routes->post('register/process', 'Register::process');
+$routes->get('register/verify', 'Register::verify');
+$routes->add('register/verifyOtp', 'Register::verifyOtp');
+$routes->add('register/resendOtp', 'Register::resendOtp');

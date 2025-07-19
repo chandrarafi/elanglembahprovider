@@ -7,21 +7,20 @@ use CodeIgniter\Model;
 class PemesananModel extends Model
 {
     protected $table            = 'pemesanan';
-    protected $primaryKey       = 'id_pemesanan';
+    protected $primaryKey       = 'idpesan';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
-        'id_paket',
-        'id_user',
-        'kode_pemesanan',
-        'nama_pemesan',
-        'email_pemesan',
-        'telp_pemesan',
-        'tgl_pemesanan',
+        'idpaket',
+        'iduser',
+        'kode_booking',
+        'tanggal',
+        'harga',
         'tgl_berangkat',
-        'total_harga',
+        'totalbiaya',
+        'catatan',
         'status'
     ];
 

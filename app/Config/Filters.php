@@ -38,6 +38,7 @@ class Filters extends BaseFilters
         'performance'   => PerformanceMetrics::class,
         'auth'          => AuthFilter::class,
         'role'          => RoleFilter::class,
+        'nocsrf'        => CSRF::class,  // Filter untuk menonaktifkan CSRF
     ];
 
     /**
@@ -74,7 +75,7 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             // 'honeypot',
-            // 'csrf',
+            //'csrf',  // CSRF protection disabled globally, see specific routes below
             // 'invalidchars',
             // Hapus auth filter dari global
         ],
@@ -117,6 +118,11 @@ class Filters extends BaseFilters
                 'laporan/*',
                 // Tambahkan rute lain yang memerlukan autentikasi
             ],
+        ],
+        'csrf' => [
+            'except' => [
+                'register/*',  // Bypass CSRF untuk semua endpoint register
+            ]
         ],
     ];
 }

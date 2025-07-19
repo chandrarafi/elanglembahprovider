@@ -68,6 +68,7 @@ class Auth extends BaseController
                     'email' => $user['email'],
                     'name' => $user['name'],
                     'role' => $user['role'],
+                    'phone' => $user['phone'] ?? '', // Tambahkan phone ke session
                     'logged_in' => true
                 ];
                 session()->set($sessionData);
@@ -111,7 +112,7 @@ class Auth extends BaseController
         // Destroy session
         session()->destroy();
 
-        return redirect()->to('auth')->with('message', 'Anda telah berhasil logout');
+        return redirect()->to('auth')->with('success', 'Anda telah berhasil logout. Sampai jumpa kembali!');
     }
 
     protected function setRememberMeCookie($userId)

@@ -159,21 +159,6 @@
                 </div>
 
                 <div class="login-body">
-                    <!-- Alert untuk pesan error/success -->
-                    <?php if (session()->getFlashdata('message')) : ?>
-                        <div class="alert alert-info alert-dismissible fade show" role="alert">
-                            <?= session()->getFlashdata('message') ?>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    <?php endif; ?>
-
-                    <!-- Alert untuk error -->
-                    <div id="loginError" class="alert alert-danger alert-dismissible fade show" style="display: none;" role="alert">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        <span id="errorMessage"></span>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-
                     <form id="loginForm" method="post">
                         <div class="mb-4">
                             <label for="username" class="form-label">Username atau Email</label>
@@ -209,6 +194,10 @@
                             <i class="bi bi-box-arrow-in-right me-2"></i>Login
                         </button>
                     </form>
+                    <div class="d-flex justify-content-between mt-3">
+                        <a class="small" href="<?= site_url('register') ?>">Belum punya akun? Daftar</a>
+                        <a class="small" href="#">Lupa password?</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -218,9 +207,42 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         $(document).ready(function() {
+            // Tampilkan SweetAlert jika ada flash message
+            <?php if (session()->getFlashdata('message')): ?>
+                Swal.fire({
+                    title: 'Informasi',
+                    text: '<?= session()->getFlashdata('message') ?>',
+                    icon: 'info',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#4e73df'
+                });
+            <?php endif; ?>
+
+            <?php if (session()->getFlashdata('success')): ?>
+                Swal.fire({
+                    title: 'Berhasil!',
+                    text: '<?= session()->getFlashdata('success') ?>',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#4e73df'
+                });
+            <?php endif; ?>
+
+            <?php if (session()->getFlashdata('error')): ?>
+                Swal.fire({
+                    title: 'Error!',
+                    text: '<?= session()->getFlashdata('error') ?>',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#4e73df'
+                });
+            <?php endif; ?>
+
             // Toggle Password Visibility
             $('#togglePassword').on('click', function() {
                 const passwordInput = $('#password');
@@ -261,15 +283,34 @@
                     dataType: 'json',
                     success: function(response) {
                         if (response.status === 'success') {
-                            window.location.href = response.redirect;
+                            Swal.fire({
+                                title: 'Login Berhasil!',
+                                text: 'Anda akan dialihkan ke halaman utama...',
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false,
+                                willClose: function() {
+                                    window.location.href = response.redirect;
+                                }
+                            });
                         } else {
-                            $('#errorMessage').text(response.message);
-                            $('#loginError').show();
+                            Swal.fire({
+                                title: 'Login Gagal!',
+                                text: response.message,
+                                icon: 'error',
+                                confirmButtonText: 'Coba Lagi',
+                                confirmButtonColor: '#4e73df'
+                            });
                         }
                     },
                     error: function() {
-                        $('#errorMessage').text('Terjadi kesalahan. Silakan coba lagi.');
-                        $('#loginError').show();
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Terjadi kesalahan. Silakan coba lagi.',
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#4e73df'
+                        });
                     },
                     complete: function() {
                         // Hide loading overlay
@@ -279,11 +320,6 @@
                     }
                 });
             });
-
-            // Auto-hide alerts after 5 seconds
-            setTimeout(function() {
-                $('.alert').not('#loginError').alert('close');
-            }, 5000);
         });
     </script>
 </body>
