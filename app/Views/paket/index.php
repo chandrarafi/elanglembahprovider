@@ -219,13 +219,13 @@
                                     <span class="bg-blue-100 text-primary text-xs font-medium px-2.5 py-0.5 rounded">
                                         <?= $paket['kategori_nama'] ?? 'Umum' ?>
                                     </span>
-                                    <div class="flex items-center">
-                                        <i class="fas fa-star text-yellow-400 mr-1"></i>
-                                        <span class="text-gray-700 text-sm font-medium"><?= number_format(4 + (mt_rand(0, 10) / 10), 1) ?></span>
-                                    </div>
                                 </div>
                                 <h3 class="text-lg font-bold text-gray-800 mb-2"><?= $paket['namapaket'] ?></h3>
-                                <p class="text-gray-600 mb-4 text-sm line-clamp-2"><?= $paket['deskripsi'] ?? 'Nikmati perjalanan wisata dengan paket yang telah kami siapkan untuk pengalaman terbaik Anda.' ?></p>
+                                <?php if (isset($paket['deskripsi']) && !empty($paket['deskripsi'])): ?>
+                                    <p class="text-gray-600 mb-4 text-sm line-clamp-2"><?= $paket['deskripsi'] ?></p>
+                                <?php else: ?>
+                                    <div class="mb-4"></div>
+                                <?php endif; ?>
                                 <div class="flex justify-between items-center">
                                     <span class="text-accent text-lg font-bold">Rp <?= number_format($paket['harga'], 0, ',', '.') ?></span>
                                     <a href="<?= base_url('paket/detail/' . $paket['idpaket']) ?>" class="inline-block bg-primary hover:bg-blue-800 text-white py-1.5 px-4 rounded-md text-sm font-medium transition duration-300">

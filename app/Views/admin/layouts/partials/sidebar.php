@@ -47,6 +47,20 @@
                 <div class="menu-title">Kelola Paket Wisata</div>
             </a>
         </li>
+        <li>
+            <a href="<?= base_url('admin/pemesanan') ?>">
+                <div class="parent-icon"><i class='bx bx-calendar-check'></i>
+                </div>
+                <div class="menu-title">Kelola Pemesanan</div>
+            </a>
+        </li>
+        <li>
+            <a href="<?= base_url('admin/reschedule') ?>">
+                <div class="parent-icon"><i class='bx bx-calendar-check'></i>
+                </div>
+                <div class="menu-title">Kelola Ubah Jadwal</div>
+            </a>
+        </li>
     </ul>
     <!--end navigation-->
 </div>

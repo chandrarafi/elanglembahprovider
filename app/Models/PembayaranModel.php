@@ -17,9 +17,11 @@ class PembayaranModel extends Model
         'tanggal_bayar',
         'jumlah_bayar',
         'metode_pembayaran',
+        'tipe_pembayaran',
         'bukti_bayar',
         'status_pembayaran',
-        'keterangan'
+        'keterangan',
+        'expired_at'
     ];
 
     // Dates
@@ -34,6 +36,7 @@ class PembayaranModel extends Model
         'tanggal_bayar'      => 'required',
         'jumlah_bayar'       => 'required|numeric',
         'metode_pembayaran'  => 'required',
+        'tipe_pembayaran'    => 'required|in_list[dp,lunas]',
         'status_pembayaran'  => 'required|in_list[pending,verified,rejected]',
     ];
     protected $validationMessages   = [];
@@ -74,5 +77,14 @@ class PembayaranModel extends Model
         return $this->where('idpesan', $idpesan)
             ->orderBy('tanggal_bayar', 'DESC')
             ->findAll();
+    }
+
+    // Fungsi untuk menghitung jumlah yang perlu dibayar berdasarkan tipe pembayaran
+    public function hitungJumlahBayar($totalbiaya, $tipePembayaran)
+    {
+        if ($tipePembayaran == 'dp') {
+            return $totalbiaya * 0.5; // 50% dari total biaya
+        }
+        return $totalbiaya; // Pembayaran lunas (100%)
     }
 }

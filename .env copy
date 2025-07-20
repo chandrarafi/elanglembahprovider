@@ -67,3 +67,10 @@ CI_ENVIRONMENT = development
 #--------------------------------------------------------------------
 
 # logger.threshold = 4
+WS_HOST=0.0.0.0
+WS_PORT=8090
+APP_URL=http://localhost:8080
+APP_HOST=localhost
+APP_PORT=8080
+# Security token for API calls
+EXPIRED_CHECK_TOKEN=elanglembahsecret123

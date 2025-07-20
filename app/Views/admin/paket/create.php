@@ -60,10 +60,37 @@
             </div>
 
             <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="minimalpeserta" class="form-label">Minimal Peserta</label>
+                    <input type="number" class="form-control" id="minimalpeserta" name="minimalpeserta" min="1" value="1">
+                    <div class="invalid-feedback" id="minimalpeserta-error"></div>
+                </div>
+                <div class="col-md-4">
+                    <label for="maximalpeserta" class="form-label">Maksimal Peserta</label>
+                    <input type="number" class="form-control" id="maximalpeserta" name="maximalpeserta" min="1" value="10">
+                    <div class="invalid-feedback" id="maximalpeserta-error"></div>
+                </div>
+                <div class="col-md-4">
+                    <label for="durasi" class="form-label">Durasi (Hari)</label>
+                    <input type="number" class="form-control" id="durasi" name="durasi" min="1" value="1">
+                    <div class="invalid-feedback" id="durasi-error"></div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
                 <div class="col-md-12">
                     <label for="deskripsi" class="form-label">Deskripsi</label>
                     <textarea class="form-control" id="deskripsi" name="deskripsi" rows="5"></textarea>
                     <div class="invalid-feedback" id="deskripsi-error"></div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label for="fasilitas" class="form-label">Fasilitas</label>
+                    <textarea class="form-control" id="fasilitas" name="fasilitas" rows="4" placeholder="Masukkan fasilitas yang tersedia dalam paket wisata ini"></textarea>
+                    <small class="text-muted">Tuliskan semua fasilitas yang tersedia dalam paket ini. Gunakan tanda koma atau baris baru untuk memisahkan setiap fasilitas.</small>
+                    <div class="invalid-feedback" id="fasilitas-error"></div>
                 </div>
             </div>
 

@@ -19,8 +19,13 @@ use Psr\Log\LoggerInterface;
  *
  * For security be sure to declare any new methods as protected or private.
  */
+
+
 abstract class BaseController extends Controller
 {
+    protected $session;
+    protected $db;
+
     /**
      * Instance of the main Request object.
      *
@@ -44,7 +49,7 @@ abstract class BaseController extends Controller
     // protected $session;
 
     /**
-     * @return void
+     * Constructor.
      */
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
@@ -52,7 +57,31 @@ abstract class BaseController extends Controller
         parent::initController($request, $response, $logger);
 
         // Preload any models, libraries, etc, here.
+        // E.g.: $this->session = \Config\Services::session();
+        $this->session = \Config\Services::session();
+        $this->db = \Config\Database::connect();
+        helper(['form', 'url', 'text', 'date']);
 
-        // E.g.: $this->session = service('session');
+        // Set up directory for uploads if they don't exist
+        $this->createUploadDirectories();
+    }
+
+    /**
+     * Create necessary upload directories
+     */
+    protected function createUploadDirectories()
+    {
+        $directories = [
+            ROOTPATH . 'public/uploads/paket',
+            ROOTPATH . 'public/uploads/payments',
+            ROOTPATH . 'public/uploads/qrcodes',
+            ROOTPATH . 'public/assets/images',
+        ];
+
+        foreach ($directories as $dir) {
+            if (!is_dir($dir)) {
+                mkdir($dir, 0777, true);
+            }
+        }
     }
 }

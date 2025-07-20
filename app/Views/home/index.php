@@ -221,7 +221,7 @@
 
     <!-- Hero Section with Image Slider -->
     <section class="hero-slider">
-        <div class="hero-slide active" style="background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('<?= base_url('assets/images/gallery/02.png') ?>')">
+        <div class="hero-slide active" style="background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('<?= base_url('assets/images/1.jpg') ?>')">
             <div class="slide-content">
                 <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">Jelajahi Keajaiban Dunia</h1>
                 <p class="text-xl text-white mb-8 max-w-3xl mx-auto">Temukan destinasi wisata luar negeri terbaik dengan panorama alam menakjubkan dan petualangan tak terlupakan</p>
@@ -232,7 +232,7 @@
                 </div>
             </div>
         </div>
-        <div class="hero-slide" style="background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('<?= base_url('assets/images/gallery/15.png') ?>')">
+        <div class="hero-slide" style="background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('<?= base_url('assets/images/2.jpg') ?>')">
             <div class="slide-content">
                 <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">Nikmati Keindahan Alam Luar Negeri</h1>
                 <p class="text-xl text-white mb-8 max-w-3xl mx-auto">Paket wisata eksklusif ke destinasi internasional dengan pengalaman premium yang dirancang khusus untuk Anda</p>
@@ -243,7 +243,7 @@
                 </div>
             </div>
         </div>
-        <div class="hero-slide" style="background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('<?= base_url('assets/images/gallery/09.png') ?>')">
+        <div class="hero-slide" style="background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('<?= base_url('assets/images/3.jpg') ?>')">
             <div class="slide-content">
                 <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">Petualangan Menakjubkan Menanti</h1>
                 <p class="text-xl text-white mb-8 max-w-3xl mx-auto">Rasakan sensasi menjelajahi keindahan alam luar negeri dengan layanan bintang lima dan harga terbaik</p>
@@ -261,6 +261,99 @@
             <div class="slider-dot" onclick="showSlide(2)"></div>
         </div>
     </section>
+
+    <?php if (session()->get('user_id') && isset($rescheduleRequests) && !empty($rescheduleRequests)): ?>
+        <!-- Reschedule Requests Notification -->
+        <section class="py-6 bg-blue-50">
+            <div class="container mx-auto px-4">
+                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Permintaan Perubahan Jadwal Menunggu
+                    </h3>
+
+                    <div class="mb-4">
+                        <p class="text-gray-600">Anda memiliki <?= count($rescheduleRequests) ?> permintaan perubahan jadwal yang sedang diproses:</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <?php foreach ($rescheduleRequests as $request): ?>
+                            <div class="bg-blue-50 p-4 rounded-lg flex items-start">
+                                <div class="bg-blue-100 rounded-full p-2 mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">Booking #<?= $request['kode_booking'] ?></p>
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        Jadwal Baru: <?= date('d M Y', strtotime($request['requested_tgl_berangkat'])) ?> s/d <?= date('d M Y', strtotime($request['requested_tgl_selesai'])) ?>
+                                    </p>
+                                    <p class="text-sm text-yellow-600 mt-1">
+                                        Status: <span class="font-medium">Menunggu Konfirmasi</span>
+                                    </p>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <div class="mt-4 text-right">
+                        <a href="<?= base_url('booking/history') ?>" class="inline-flex items-center text-blue-600 hover:text-blue-800">
+                            Lihat Semua Riwayat
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    <?php endif; ?>
+
+    <?php if (session()->get('user_id') && isset($upcomingBookings) && !empty($upcomingBookings)): ?>
+        <!-- Upcoming Bookings Notification -->
+        <section class="py-6 bg-blue-50">
+            <div class="container mx-auto px-4">
+                <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-3 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Perjalanan Mendatang
+                    </h3>
+
+                    <div class="mb-4">
+                        <p class="text-gray-600">Anda memiliki perjalanan yang akan datang:</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <?php foreach ($upcomingBookings as $booking): ?>
+                            <div class="bg-green-50 p-4 rounded-lg flex items-start">
+                                <div class="bg-green-100 rounded-full p-2 mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">Booking #<?= $booking['kode_booking'] ?></p>
+                                    <p class="text-sm text-gray-600 mt-1">
+                                        Jadwal: <?= date('d M Y', strtotime($booking['tgl_berangkat'])) ?> s/d <?= date('d M Y', strtotime($booking['tgl_selesai'])) ?>
+                                    </p>
+                                    <div class="mt-2">
+                                        <a href="<?= base_url('booking/detail/' . $booking['idpesan']) ?>" class="text-xs bg-green-600 hover:bg-green-700 text-white py-1 px-2 rounded">
+                                            Lihat Detail
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </section>
+    <?php endif; ?>
 
     <!-- Featured Destinations -->
     <section class="py-16 bg-gradient-to-b from-blue-50 to-white">

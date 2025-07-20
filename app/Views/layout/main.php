@@ -25,10 +25,66 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
     <style>
         .paket-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Animation for countdown timer */
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+            }
+        }
+
+        .timer-pulse {
+            animation: pulse-red 2s infinite;
+        }
+
+        /* Animated transition effects */
+        .fade-in {
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .slide-up {
+            transform: translateY(20px);
+            opacity: 0;
+            animation: slideUp 0.5s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
     </style>
 </head>
@@ -105,6 +161,33 @@
         </div>
     </nav>
 
+    <!-- Flash Messages -->
+    <?php if (session()->getFlashdata('success')): ?>
+        <div class="flash-message success animate__animated animate__fadeInDown" id="flashMessage">
+            <div class="container mx-auto px-4 py-3 mt-3">
+                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-md">
+                    <div class="flex items-center">
+                        <div class="py-1"><i class="fas fa-check-circle mr-2"></i></div>
+                        <div><?= session()->getFlashdata('success') ?></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <?php if (session()->getFlashdata('error')): ?>
+        <div class="flash-message error animate__animated animate__fadeInDown" id="flashMessage">
+            <div class="container mx-auto px-4 py-3 mt-3">
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-md">
+                    <div class="flex items-center">
+                        <div class="py-1"><i class="fas fa-exclamation-circle mr-2"></i></div>
+                        <div><?= session()->getFlashdata('error') ?></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <!-- Main Content -->
     <?= $this->renderSection('content') ?>
 
@@ -167,12 +250,30 @@
         </div>
     </footer>
 
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        // Base URL for AJAX requests
+        const baseUrl = '<?= base_url() ?>';
+
         // Mobile menu toggle
         document.addEventListener('DOMContentLoaded', function() {
+            // Auto hide flash messages after 5 seconds
+            setTimeout(function() {
+                const flashMessage = document.getElementById('flashMessage');
+                if (flashMessage) {
+                    flashMessage.classList.remove('animate__fadeInDown');
+                    flashMessage.classList.add('animate__fadeOutUp');
+                    setTimeout(function() {
+                        flashMessage.style.display = 'none';
+                    }, 500);
+                }
+            }, 5000);
+
             document.getElementById('mobile-menu-button').addEventListener('click', function() {
                 document.getElementById('mobile-menu').classList.toggle('hidden');
             });
@@ -194,6 +295,9 @@
                     }
                 });
             }
+
+            // Add animation classes to elements
+            addAnimationClasses();
         });
 
         // Logout confirmation
@@ -213,7 +317,63 @@
                 }
             });
         }
+
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+
+            Toast.fire({
+                icon: type,
+                title: message
+            });
+        }
+
+        // Confirmation dialog function
+        function confirmAction(title, text, confirmText, callback) {
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: confirmText,
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    callback();
+                }
+            });
+        }
+
+        // Add animation classes to elements
+        function addAnimationClasses() {
+            // Add animation to headings
+            $('.animate-heading').addClass('animate__animated animate__fadeIn');
+
+            // Add animation to buttons
+            $('.animate-button').addClass('animate__animated animate__pulse');
+
+            // Add animation to cards with delay
+            $('.animate-card').each(function(index) {
+                $(this).addClass('animate__animated animate__fadeInUp')
+                    .css('animation-delay', (index * 0.1) + 's');
+            });
+        }
     </script>
+
+    <!-- Include additional scripts -->
+    <?= $this->renderSection('scripts') ?>
 </body>
 
 </html>

@@ -133,7 +133,7 @@ class App extends BaseConfig
      * @see https://www.php.net/manual/en/timezones.php for list of timezones
      *      supported by PHP.
      */
-    public string $appTimezone = 'UTC';
+    public string $appTimezone = 'Asia/Jakarta';
 
     /**
      * --------------------------------------------------------------------------
@@ -199,4 +199,28 @@ class App extends BaseConfig
      * @see http://www.w3.org/TR/CSP/
      */
     public bool $CSPEnabled = false;
+
+    /**
+     * --------------------------------------------------------------------------
+     * Error Display
+     * --------------------------------------------------------------------------
+     * In development, we want to show as many errors as possible to help
+     * make sure they don't make it to production. And save us hours of
+     * painful debugging.
+     */
+    public bool $displayErrors = true;
+
+    /**
+     * --------------------------------------------------------------------------
+     * Custom Error Handler for Ajax Requests
+     * --------------------------------------------------------------------------
+     * This function helps maintain clean JSON responses for AJAX requests
+     * by disabling error output that would break JSON formatting
+     */
+    public function handleAjaxErrors()
+    {
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            ini_set('display_errors', '0');
+        }
+    }
 }

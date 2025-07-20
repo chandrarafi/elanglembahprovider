@@ -20,6 +20,10 @@ class PaketWisataModel extends Model
         'statuspaket',
         'foto',
         'idkategori',
+        'minimalpeserta',
+        'maximalpeserta',
+        'fasilitas',
+        'durasi',
     ];
 
     // Dates

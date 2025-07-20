@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\KategoriModel;
 use App\Models\PaketWisataModel;
+use App\Models\PemesananModel;
 
 class Home extends BaseController
 {
@@ -18,51 +19,44 @@ class Home extends BaseController
 
     public function index()
     {
-        // Ambil data kategori dari database (hanya yang aktif)
-        $kategori = $this->kategoriModel->where('status', 'active')->findAll();
+        // Load models
+        $paketModel = new PaketWisataModel();
+        $kategoriModel = new KategoriModel();
+        $pemesananModel = new PemesananModel();
+        $rescheduleModel = new \App\Models\RescheduleRequestModel();
 
-        // Ambil 3 kategori teratas untuk featured destinations
-        $featured_destinations = array_slice($kategori, 0, 3);
+        // Get active categories and packages
+        $kategori = $kategoriModel->findAll();
+        $paket = $paketModel->findAll();
 
-        // Ambil data paket populer - Kita gunakan 6 paket dengan cara yang lebih baik
-        // Asumsi: paket populer bisa diambil berdasarkan field tertentu atau filter tertentu
-        $paket_populer = $this->paketModel
-            ->where('statuspaket', 'active')
-            ->orderBy('harga', 'DESC') // Pakai orderBy harga sebagai contoh untuk paket premium/populer
-            ->limit(6)
-            ->find();
-
-        // Ambil data paket terbaru berdasarkan created_at
-        $paket_terbaru = $this->paketModel
-            ->where('statuspaket', 'active')
-            ->orderBy('created_at', 'DESC')
-            ->limit(3)
-            ->find();
-
-        // Get kategori details for each paket
-        foreach ($paket_populer as $key => $paket) {
-            $kategoriDetail = $this->kategoriModel->find($paket['idkategori']);
-            $paket_populer[$key]['kategori_nama'] = $kategoriDetail['namakategori'] ?? '';
-        }
-
-        foreach ($paket_terbaru as $key => $paket) {
-            $kategoriDetail = $this->kategoriModel->find($paket['idkategori']);
-            $paket_terbaru[$key]['kategori_nama'] = $kategoriDetail['namakategori'] ?? '';
-        }
-
-        // Data untuk view
+        // Data for view
         $data = [
-            'title' => 'Elang Lembah Travel - Wisata Terbaik untuk Anda',
+            'title' => 'Beranda',
             'kategori' => $kategori,
-            'featured_destinations' => $featured_destinations,
-            'paket_populer' => $paket_populer,
-            'paket_terbaru' => $paket_terbaru,
-            'is_logged_in' => session()->get('logged_in') ?? false,
-            'user' => [
-                'name' => session()->get('name') ?? '',
-                'role' => session()->get('role') ?? ''
-            ]
+            'paket' => $paket,
         ];
+
+        // If user is logged in, get booking data
+        if (session()->get('user_id')) {
+            $userId = session()->get('user_id');
+
+            // Get upcoming bookings
+            $pemesanan = $pemesananModel->where('iduser', $userId)
+                ->whereIn('status', ['confirmed', 'completed'])
+                ->where('tgl_berangkat >=', date('Y-m-d'))
+                ->orderBy('tgl_berangkat', 'ASC')
+                ->findAll(3);
+
+            // Get pending reschedule requests
+            $rescheduleRequests = $rescheduleModel->where('status', 'pending')
+                ->join('pemesanan', 'pemesanan.idpesan = reschedule_requests.idpesan')
+                ->where('pemesanan.iduser', $userId)
+                ->select('reschedule_requests.*, pemesanan.kode_booking')
+                ->findAll();
+
+            $data['upcomingBookings'] = $pemesanan;
+            $data['rescheduleRequests'] = $rescheduleRequests;
+        }
 
         return view('home/index', $data);
     }

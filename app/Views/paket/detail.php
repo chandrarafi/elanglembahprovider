@@ -149,19 +149,6 @@
                                     <span class="bg-blue-100 text-primary text-xs font-medium px-2.5 py-0.5 rounded mr-2">
                                         <?= $kategori['namakategori'] ?? 'Umum' ?>
                                     </span>
-                                    <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                                        POPULER
-                                    </span>
-                                </div>
-                                <div class="flex items-center mt-2 md:mt-0">
-                                    <div class="flex text-yellow-400">
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star-half-alt"></i>
-                                    </div>
-                                    <span class="text-gray-600 text-sm ml-2">(4.8/5 - 24 ulasan)</span>
                                 </div>
                             </div>
 
@@ -174,17 +161,7 @@
                                     <?php if (isset($paket['deskripsi']) && !empty($paket['deskripsi'])): ?>
                                         <p><?= nl2br($paket['deskripsi']) ?></p>
                                     <?php else: ?>
-                                        <p>Nikmati pengalaman wisata yang luar biasa dengan paket perjalanan kami. Dilengkapi dengan akomodasi kelas atas, transportasi yang nyaman, dan panduan perjalanan profesional untuk memastikan liburan Anda berkesan.</p>
-                                        <p>Paket ini mencakup:</p>
-                                        <ul class="list-disc pl-5 mt-3 space-y-2">
-                                            <li>Tiket pesawat pulang-pergi</li>
-                                            <li>Akomodasi hotel bintang 4</li>
-                                            <li>Transportasi selama perjalanan</li>
-                                            <li>Makan 3x sehari</li>
-                                            <li>Tour guide profesional</li>
-                                            <li>Tiket masuk tempat wisata</li>
-                                            <li>Asuransi perjalanan</li>
-                                        </ul>
+                                        <p>Informasi detail paket belum tersedia.</p>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -206,45 +183,50 @@
                                 </div>
 
                                 <div class="space-y-4">
-                                    <div class="flex justify-between text-sm">
-                                        <span class="text-gray-600">Durasi</span>
-                                        <span class="text-gray-800 font-medium">5 hari 4 malam</span>
-                                    </div>
-                                    <div class="flex justify-between text-sm">
-                                        <span class="text-gray-600">Berangkat</span>
-                                        <span class="text-gray-800 font-medium">Setiap Minggu</span>
-                                    </div>
-                                    <div class="flex justify-between text-sm">
-                                        <span class="text-gray-600">Minimal Peserta</span>
-                                        <span class="text-gray-800 font-medium">2 orang</span>
-                                    </div>
+                                    <?php if (isset($paket['durasi']) && !empty($paket['durasi'])): ?>
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600">Durasi</span>
+                                            <span class="text-gray-800 font-medium"><?= $paket['durasi'] ?> hari <?= ($paket['durasi'] > 1) ? ($paket['durasi'] - 1) . ' malam' : '' ?></span>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <?php if (isset($paket['minimalpeserta']) && !empty($paket['minimalpeserta'])): ?>
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600">Minimal Peserta</span>
+                                            <span class="text-gray-800 font-medium"><?= $paket['minimalpeserta'] ?> orang</span>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <?php if (isset($paket['maximalpeserta']) && !empty($paket['maximalpeserta'])): ?>
+                                        <div class="flex justify-between text-sm">
+                                            <span class="text-gray-600">Maksimal Peserta</span>
+                                            <span class="text-gray-800 font-medium"><?= $paket['maximalpeserta'] ?> orang</span>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
 
-                                <div class="border-t border-gray-200 my-4 pt-4">
-                                    <h3 class="font-bold text-gray-800 mb-2">Yang perlu dibawa:</h3>
-                                    <ul class="text-sm text-gray-600 space-y-1">
-                                        <li class="flex items-center">
-                                            <i class="fas fa-check text-green-500 mr-2"></i>
-                                            Passport dengan masa berlaku min. 6 bulan
-                                        </li>
-                                        <li class="flex items-center">
-                                            <i class="fas fa-check text-green-500 mr-2"></i>
-                                            Pakaian dan perlengkapan pribadi
-                                        </li>
-                                        <li class="flex items-center">
-                                            <i class="fas fa-check text-green-500 mr-2"></i>
-                                            Kamera untuk dokumentasi
-                                        </li>
-                                        <li class="flex items-center">
-                                            <i class="fas fa-check text-green-500 mr-2"></i>
-                                            Uang saku secukupnya
-                                        </li>
-                                    </ul>
-                                </div>
+                                <?php if (isset($paket['fasilitas']) && !empty($paket['fasilitas'])): ?>
+                                    <div class="border-t border-gray-200 my-4 pt-4">
+                                        <h3 class="font-bold text-gray-800 mb-2">Fasilitas:</h3>
+                                        <ul class="text-sm text-gray-600 space-y-1">
+                                            <?php
+                                            $fasilitasList = explode("\n", str_replace(', ', "\n", $paket['fasilitas']));
+                                            foreach ($fasilitasList as $fasilitas):
+                                                if (trim($fasilitas) !== ''):
+                                            ?>
+                                                    <li class="flex items-center">
+                                                        <i class="fas fa-check text-green-500 mr-2"></i>
+                                                        <?= trim($fasilitas) ?>
+                                                    </li>
+                                            <?php
+                                                endif;
+                                            endforeach;
+                                            ?>
+                                        </ul>
+                                    </div>
+                                <?php endif; ?>
 
                                 <div class="border-t border-gray-200 my-4 pt-4 text-center">
-                                    <p class="text-sm text-gray-600 mb-4">Tersedia <?= mt_rand(2, 10) ?> slot terakhir untuk bulan ini!</p>
-
                                     <?php if ($is_logged_in): ?>
                                         <a href="<?= base_url('booking/create/' . $paket['idpaket']) ?>" class="block bg-accent hover:bg-yellow-600 text-white py-3 px-4 rounded-md font-medium transition duration-300 w-full">
                                             Pesan Sekarang

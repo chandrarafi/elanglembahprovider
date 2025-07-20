@@ -35,9 +35,12 @@ $routes->group('booking', ['filter' => 'auth'], function ($routes) {
     $routes->get('detail/(:num)', 'Booking::detail/$1');
     $routes->get('create/(:segment)', 'Booking::create/$1');
     $routes->post('store', 'Booking::store');
+    $routes->get('cancel/(:num)', 'Booking::cancel/$1');
     $routes->post('cancel/(:num)', 'Booking::cancel/$1');
     $routes->get('payment/(:num)', 'Booking::payment/$1');
     $routes->post('savePayment', 'Booking::savePayment');
+    $routes->get('checkPaymentExpiration/(:num)', 'Booking::checkPaymentExpiration/$1');
+    $routes->post('checkAvailability', 'Booking::checkAvailability');
 });
 
 // Admin routes (perlu filter auth dan role admin)
@@ -54,7 +57,7 @@ $routes->group('admin', ['filter' => ['auth', 'role:admin']], function ($routes)
     $routes->delete('deleteUser/(:num)', 'Admin::deleteUser/$1');
 
     // Kategori Management
-    $routes->get('kategori', 'Kategori::index');
+    $routes->get('kategori', 'Kategori::admin');
     $routes->get('getKategori', 'Kategori::getKategori');
     $routes->get('getKategori/(:segment)', 'Kategori::getKategoriById/$1');
     $routes->post('createKategori', 'Kategori::createKategori');
@@ -62,7 +65,7 @@ $routes->group('admin', ['filter' => ['auth', 'role:admin']], function ($routes)
     $routes->delete('deleteKategori/(:segment)', 'Kategori::deleteKategori/$1');
 
     // Paket Wisata Management
-    $routes->get('paket', 'Paket::index');
+    $routes->get('paket', 'Paket::admin');
     $routes->get('paket/create', 'Paket::create');
     $routes->get('paket/edit/(:segment)', 'Paket::edit/$1');
     $routes->get('getPaket', 'Paket::getPaket');
@@ -81,11 +84,17 @@ $routes->group('admin', ['filter' => ['auth', 'role:admin']], function ($routes)
 
     // Pemesanan Management
     $routes->get('pemesanan', 'Admin\Pemesanan::index');
+    $routes->get('pemesanan/getPemesanan', 'Admin\Pemesanan::getPemesanan');
     $routes->get('pemesanan/detail/(:num)', 'Admin\Pemesanan::detail/$1');
     $routes->post('pemesanan/updateStatus/(:num)', 'Admin\Pemesanan::updateStatus/$1');
     $routes->post('pemesanan/verifyPayment/(:num)', 'Admin\Pemesanan::verifyPayment/$1');
     $routes->get('pemesanan/create', 'Admin\Pemesanan::create');
     $routes->post('pemesanan/store', 'Admin\Pemesanan::store');
+
+
+    $routes->get('reschedule', 'Admin\RescheduleRequest::index');
+    $routes->get('reschedule/view/(:num)', 'Admin\RescheduleRequest::view/$1');
+    $routes->post('reschedule/process', 'Admin\RescheduleRequest::process');
 });
 
 // Tambahkan routes berikut
@@ -94,3 +103,30 @@ $routes->post('register/process', 'Register::process');
 $routes->get('register/verify', 'Register::verify');
 $routes->add('register/verifyOtp', 'Register::verifyOtp');
 $routes->add('register/resendOtp', 'Register::resendOtp');
+
+// Booking routes
+$routes->get('/booking/create/(:num)', 'Booking::create/$1');
+$routes->post('/booking/store', 'Booking::store');
+$routes->get('/booking/detail/(:num)', 'Booking::detail/$1');
+$routes->get('/booking/payment/(:num)', 'Booking::payment/$1');
+$routes->post('/booking/savePayment', 'Booking::savePayment');
+$routes->get('/booking/cancel/(:num)', 'Booking::cancel/$1');
+$routes->get('/booking/history', 'Booking::history');
+$routes->get('/booking/downloadTicket/(:num)', 'Booking::downloadTicket/$1');
+$routes->get('/booking/downloadInvoice/(:num)', 'Booking::downloadInvoice/$1');
+
+// Ticket verification routes
+$routes->get('/verify', 'Verify::index');
+$routes->get('/verify/ticket/(:any)', 'Verify::ticket/$1');
+
+// Test route - remove in production
+$routes->get('/booking/testCreatePayment/(:num)', 'Booking::testCreatePayment/$1');
+
+// API Routes untuk background check
+$routes->get('/api/check-expired-payments', 'Api::checkExpiredPayments');
+
+// Reschedule routes
+$routes->get('reschedule/request/(:num)', 'Reschedule::request/$1');
+$routes->post('reschedule/submit', 'Reschedule::submit');
+$routes->get('reschedule/history/(:num)', 'Reschedule::history/$1');
+$routes->get('reschedule/cancel/(:num)', 'Reschedule::cancel/$1');
