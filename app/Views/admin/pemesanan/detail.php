@@ -16,6 +16,20 @@
         <a href="/admin/pemesanan" class="btn btn-secondary px-3">
             <i class="bx bx-arrow-back"></i> Kembali
         </a>
+
+        <?php if (($pemesanan['status'] ?? '') != 'completed'): ?>
+            <a href="/admin/pemesanan/edit/<?= $pemesanan['idpesan'] ?? '' ?>" class="btn btn-warning px-3 ms-1">
+                <i class="bx bx-edit"></i> Edit
+            </a>
+            <a href="#" onclick="confirmDelete(<?= $pemesanan['idpesan'] ?? '' ?>)" class="btn btn-danger px-3 ms-1">
+                <i class="bx bx-trash"></i> Hapus
+            </a>
+            <?php if (isset($pemesanan['catatan']) && $pemesanan['catatan'] === "pemesanan dilakukan oleh admin"): ?>
+                <a href="/admin/reschedule/createRequest/<?= $pemesanan['idpesan'] ?? '' ?>" class="btn btn-primary px-3 ms-1">
+                    <i class="bx bx-calendar-edit"></i> Ubah Jadwal
+                </a>
+            <?php endif; ?>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -530,6 +544,25 @@
         </div>
     </div>
 </div>
+
+<!-- Modal konfirmasi hapus -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Konfirmasi Hapus</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Apakah Anda yakin ingin menghapus pemesanan ini? Semua data pembayaran terkait juga akan dihapus.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <a href="#" id="btn-delete" class="btn btn-danger">Hapus</a>
+            </div>
+        </div>
+    </div>
+</div>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -701,6 +734,17 @@
         document.getElementById('previewImage').src = src;
         const imageModal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
         imageModal.show();
+    }
+</script>
+
+<script>
+    // Function for delete confirmation
+    function confirmDelete(id) {
+        // Set URL untuk tombol hapus
+        document.getElementById('btn-delete').href = `/admin/pemesanan/destroy/${id}`;
+        // Tampilkan modal konfirmasi
+        var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        deleteModal.show();
     }
 </script>
 

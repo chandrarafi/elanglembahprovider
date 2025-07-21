@@ -29,11 +29,26 @@ class Home extends BaseController
         $kategori = $kategoriModel->findAll();
         $paket = $paketModel->findAll();
 
+        // Ambil beberapa kategori untuk featured destinations
+        $featured_destinations = array_slice($kategori, 0, 3);
+
+        // Ambil paket populer dan terbaru
+        $paket_populer = array_slice($paket, 0, 3);
+        $paket_terbaru = array_slice($paket, -3);
+
         // Data for view
         $data = [
             'title' => 'Beranda',
             'kategori' => $kategori,
             'paket' => $paket,
+            'featured_destinations' => $featured_destinations,
+            'paket_populer' => $paket_populer,
+            'paket_terbaru' => $paket_terbaru,
+            'is_logged_in' => session()->get('user_id') ? true : false,
+            'user' => session()->get('user_id') ? [
+                'name' => session()->get('name'),
+                'email' => session()->get('email')
+            ] : null,
         ];
 
         // If user is logged in, get booking data
@@ -48,7 +63,7 @@ class Home extends BaseController
                 ->findAll(3);
 
             // Get pending reschedule requests
-            $rescheduleRequests = $rescheduleModel->where('status', 'pending')
+            $rescheduleRequests = $rescheduleModel->where('reschedule_requests.status', 'pending')
                 ->join('pemesanan', 'pemesanan.idpesan = reschedule_requests.idpesan')
                 ->where('pemesanan.iduser', $userId)
                 ->select('reschedule_requests.*, pemesanan.kode_booking')

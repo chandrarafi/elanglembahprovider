@@ -1,0 +1,3 @@
+@echo off
+echo Starting Payment WebSocket Server...
+php server.php 

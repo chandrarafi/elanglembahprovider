@@ -149,7 +149,8 @@ class Pemesanan extends BaseController
                 'tanggal' => date('d-m-Y', strtotime($row['tanggal'])),
                 'tgl_berangkat' => date('d-m-Y', strtotime($row['tgl_berangkat'])),
                 'totalbiaya' => number_format($row['totalbiaya'], 0, ',', '.'),
-                'status' => $row['status']
+                'status' => $row['status'],
+                'catatan' => $row['catatan'] ?? ''
                 // Removed payment-related fields
             ];
         }
@@ -575,6 +576,455 @@ class Pemesanan extends BaseController
             return true;
         } else {
             log_message('error', 'Failed to send payment verification email: ' . $this->email->printDebugger(['headers']));
+            return false;
+        }
+    }
+
+    /**
+     * Halaman formulir pembuatan pemesanan oleh admin
+     */
+    public function create()
+    {
+        // Load model pelanggan
+        $pelangganModel = new \App\Models\PelangganModel();
+
+        $data = [
+            'title' => 'Buat Pemesanan Baru',
+            'paket' => $this->paketModel->where('statuspaket', 'active')->findAll(),
+            'users' => $this->userModel->where('role', 'user')->findAll(),
+            'pelanggan' => $pelangganModel->getPelangganWithUser() // Get pelanggan with associated user data
+        ];
+
+        return view('admin/pemesanan/create', $data);
+    }
+
+    /**
+     * Proses pembuatan pemesanan oleh admin
+     */
+    public function store()
+    {
+        // Validasi input
+        $rules = [
+            'idpaket' => 'required|',
+            'iduser' => 'required|',
+            'tgl_berangkat' => 'required|valid_date',
+            'jumlah_peserta' => 'required|numeric|greater_than[0]',
+            'catatan' => 'permit_empty'
+        ];
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()
+                ->with('error', 'Mohon periksa kembali form isian Anda.')
+                ->with('validation', $this->validator->getErrors())
+                ->withInput();
+        }
+
+        // Ambil data input
+        $id_paket = $this->request->getPost('idpaket');
+        $id_user = $this->request->getPost('iduser');
+        $tgl_berangkat = $this->request->getPost('tgl_berangkat');
+        $jumlah_peserta = (int)$this->request->getPost('jumlah_peserta');
+        $catatan = $this->request->getPost('catatan');
+        $status_pemesanan = $this->request->getPost('status') ?? 'confirmed';
+
+        // Validasi paket dan user
+        $paket = $this->paketModel->find($id_paket);
+        $user = $this->userModel->find($id_user);
+
+        if (!$paket) {
+            return redirect()->back()
+                ->with('error', 'Paket wisata tidak ditemukan.')
+                ->withInput();
+        }
+
+        if (!$user) {
+            return redirect()->back()
+                ->with('error', 'Pelanggan tidak ditemukan.')
+                ->withInput();
+        }
+
+        // Hitung tanggal selesai berdasarkan durasi paket
+        $durasi = isset($paket['durasi']) && !empty($paket['durasi']) ? (int)$paket['durasi'] : 1;
+        $tgl_selesai = date('Y-m-d', strtotime("$tgl_berangkat + " . ($durasi - 1) . " days"));
+
+        // Cek ketersediaan paket pada tanggal yang dipilih
+        if (!$this->pemesananModel->cekKetersediaan($id_paket, $tgl_berangkat, $tgl_selesai)) {
+            return redirect()->back()
+                ->with('error', 'Paket tidak tersedia pada tanggal yang dipilih. Silakan pilih tanggal lain.')
+                ->withInput();
+        }
+
+        // Generate kode booking
+        $kode_booking = 'ELP' . date('Ymd') . rand(1000, 9999);
+
+        // Hitung total biaya
+        $total_biaya = $paket['harga'];
+
+        // Simpan data pemesanan
+        $data_pemesanan = [
+            'idpaket' => $id_paket,
+            'iduser' => $id_user,
+            'kode_booking' => $kode_booking,
+            'tanggal' => date('Y-m-d H:i:s'),
+            'tgl_berangkat' => $tgl_berangkat,
+            'tgl_selesai' => $tgl_selesai,
+            'harga' => $paket['harga'],
+            'jumlah_peserta' => $jumlah_peserta,
+            'totalbiaya' => $total_biaya,
+            'catatan' => "pemesanan dilakukan oleh admin",
+            'status' => $status_pemesanan,
+        ];
+
+        // Insert pemesanan ke database
+        $this->pemesananModel->insert($data_pemesanan);
+        $id_pemesanan = $this->pemesananModel->getInsertID();
+
+        // Jika status confirmed, buat juga pembayaran yang langsung terverifikasi
+        if ($status_pemesanan == 'confirmed') {
+            $data_pembayaran = [
+                'idpesan' => $id_pemesanan,
+                'tanggal_bayar' => date('Y-m-d H:i:s'),
+                'jumlah_bayar' => $total_biaya,
+                'metode_pembayaran' => 'Offline',
+                'bukti_bayar' => 'offline_payment.jpg', // default image for offline payments
+                'tipe_pembayaran' => 'lunas',
+                'status_pembayaran' => 'verified',
+                'keterangan' => 'Pembayaran offline (pemesanan oleh admin)'
+            ];
+
+            $this->pembayaranModel->insert($data_pembayaran);
+
+            // Kirim email notifikasi ke pelanggan
+            $this->sendBookingConfirmationEmail($user, $data_pemesanan, $paket);
+        }
+
+        return redirect()->to('/admin/pemesanan/detail/' . $id_pemesanan)
+            ->with('success', 'Pemesanan berhasil dibuat.');
+    }
+
+    /**
+     * Kirim email konfirmasi pemesanan ke pelanggan
+     */
+    protected function sendBookingConfirmationEmail($user, $pemesanan, $paket)
+    {
+        // Pastikan email pelanggan tersedia
+        if (empty($user['email'])) {
+            return false;
+        }
+
+        // Siapkan email
+        $this->email->setTo($user['email']);
+        $this->email->setFrom('noreply@elanglembah.com', 'Elang Lembah Tourism');
+        $this->email->setSubject('Konfirmasi Pemesanan #' . $pemesanan['kode_booking']);
+
+        // Buat body email
+        $message = "
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background-color: #4a6fdc; color: white; padding: 15px; text-align: center; }
+                .content { padding: 20px; border: 1px solid #ddd; }
+                .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #777; }
+                .details { background-color: #f9f9f9; padding: 15px; margin: 15px 0; }
+                .status { font-weight: bold; color: #28a745; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h2>Konfirmasi Pemesanan</h2>
+                </div>
+                <div class='content'>
+                    <p>Halo <b>{$user['name']}</b>,</p>
+                    <p>Pemesanan paket wisata Anda telah <b>DIKONFIRMASI</b>.</p>
+                    
+                    <div class='details'>
+                        <p><strong>Kode Booking:</strong> {$pemesanan['kode_booking']}</p>
+                        <p><strong>Paket Wisata:</strong> {$paket['namapaket']}</p>
+                        <p><strong>Tanggal Berangkat:</strong> " . date('d M Y', strtotime($pemesanan['tgl_berangkat'])) . "</p>
+                        <p><strong>Tanggal Selesai:</strong> " . date('d M Y', strtotime($pemesanan['tgl_selesai'])) . "</p>
+                        <p><strong>Jumlah Peserta:</strong> {$pemesanan['jumlah_peserta']} orang</p>
+                        <p><strong>Total Biaya:</strong> Rp " . number_format($pemesanan['totalbiaya'], 0, ',', '.') . "</p>
+                        <p><strong>Status:</strong> <span class='status'>Dikonfirmasi</span></p>
+                    </div>
+                    
+                    <p>Pembayaran Anda telah diterima. Terima kasih!</p>
+                    
+                    <p>Silakan login ke akun Anda untuk melihat detail pemesanan atau hubungi customer service kami jika Anda memiliki pertanyaan.</p>
+                    
+                    <p>Terima kasih telah memilih Elang Lembah Tourism.</p>
+                </div>
+                <div class='footer'>
+                    <p>© " . date('Y') . " Elang Lembah Tourism. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+
+        $this->email->setMessage($message);
+
+        // Coba kirim email
+        if ($this->email->send()) {
+            return true;
+        } else {
+            log_message('error', 'Failed to send booking confirmation email: ' . $this->email->printDebugger(['headers']));
+            return false;
+        }
+    }
+
+    /**
+     * Menampilkan form edit pemesanan
+     */
+    public function edit($id_pemesanan)
+    {
+        $pemesanan = $this->pemesananModel->find($id_pemesanan);
+        if (!$pemesanan) {
+            return redirect()->to('/admin/pemesanan')->with('error', 'Pemesanan tidak ditemukan');
+        }
+
+        // Cek apakah pemesanan sudah completed, jika ya redirect ke detail
+        if ($pemesanan['status'] === 'completed') {
+            return redirect()->to('/admin/pemesanan/detail/' . $id_pemesanan)
+                ->with('error', 'Pemesanan yang sudah selesai tidak dapat diedit');
+        }
+
+        // Load model pelanggan
+        $pelangganModel = new \App\Models\PelangganModel();
+
+        // Get paket and user data
+        $paket = $this->paketModel->find($pemesanan['idpaket']);
+        $user = $this->userModel->find($pemesanan['iduser']);
+
+        $data = [
+            'title' => 'Edit Pemesanan',
+            'pemesanan' => $pemesanan,
+            'paket' => $this->paketModel->where('statuspaket', 'active')->findAll(),
+            'users' => $this->userModel->where('role', 'user')->findAll(),
+            'pelanggan' => $pelangganModel->getPelangganWithUser(),
+            'selected_paket' => $paket,
+            'selected_user' => $user,
+            'validation' => \Config\Services::validation(),
+        ];
+
+        return view('admin/pemesanan/edit', $data);
+    }
+
+    /**
+     * Memperbarui data pemesanan
+     */
+    public function update($id_pemesanan)
+    {
+        $pemesanan = $this->pemesananModel->find($id_pemesanan);
+        if (!$pemesanan) {
+            return redirect()->to('/admin/pemesanan')->with('error', 'Pemesanan tidak ditemukan');
+        }
+
+        // Cek apakah pemesanan sudah completed, jika ya redirect ke detail
+        if ($pemesanan['status'] === 'completed') {
+            return redirect()->to('/admin/pemesanan/detail/' . $id_pemesanan)
+                ->with('error', 'Pemesanan yang sudah selesai tidak dapat diedit');
+        }
+
+        // Validasi input
+        $rules = [
+            'idpaket' => 'required',
+            'iduser' => 'required',
+            'tgl_berangkat' => 'required|valid_date',
+            'jumlah_peserta' => 'required|numeric|greater_than[0]',
+            'catatan' => 'permit_empty'
+        ];
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()
+                ->with('error', 'Mohon periksa kembali form isian Anda.')
+                ->with('validation', $this->validator->getErrors())
+                ->withInput();
+        }
+
+        // Ambil data input
+        $id_paket = $this->request->getPost('idpaket');
+        $id_user = $this->request->getPost('iduser');
+        $tgl_berangkat = $this->request->getPost('tgl_berangkat');
+        $jumlah_peserta = (int)$this->request->getPost('jumlah_peserta');
+        $catatan = $this->request->getPost('catatan');
+        $status_pemesanan = $this->request->getPost('status') ?? $pemesanan['status'];
+
+        // Validasi paket dan user
+        $paket = $this->paketModel->find($id_paket);
+        $user = $this->userModel->find($id_user);
+
+        if (!$paket) {
+            return redirect()->back()
+                ->with('error', 'Paket wisata tidak ditemukan.')
+                ->withInput();
+        }
+
+        if (!$user) {
+            return redirect()->back()
+                ->with('error', 'Pelanggan tidak ditemukan.')
+                ->withInput();
+        }
+
+        // Hitung tanggal selesai berdasarkan durasi paket
+        $durasi = isset($paket['durasi']) && !empty($paket['durasi']) ? (int)$paket['durasi'] : 1;
+        $tgl_selesai = date('Y-m-d', strtotime("$tgl_berangkat + " . ($durasi - 1) . " days"));
+
+        // Cek ketersediaan paket pada tanggal yang dipilih (kecuali pemesanan ini sendiri)
+        if (!$this->pemesananModel->cekKetersediaan($id_paket, $tgl_berangkat, $tgl_selesai, $id_pemesanan)) {
+            return redirect()->back()
+                ->with('error', 'Paket tidak tersedia pada tanggal yang dipilih. Silakan pilih tanggal lain.')
+                ->withInput();
+        }
+
+        // Hitung total biaya
+        $total_biaya = $paket['harga'];
+
+        // Siapkan data untuk diupdate
+        $data_pemesanan = [
+            'idpaket' => $id_paket,
+            'iduser' => $id_user,
+            'tgl_berangkat' => $tgl_berangkat,
+            'tgl_selesai' => $tgl_selesai,
+            'harga' => $paket['harga'],
+            'jumlah_peserta' => $jumlah_peserta,
+            'totalbiaya' => $total_biaya,
+            // 'catatan' => $catatan,
+            'status' => $status_pemesanan,
+        ];
+
+        // Update data pemesanan
+        $this->pemesananModel->update($id_pemesanan, $data_pemesanan);
+
+        // Kirim email notifikasi ke pelanggan tentang perubahan
+        $this->sendBookingUpdateEmail($user, $data_pemesanan, $paket);
+
+        return redirect()->to('/admin/pemesanan/detail/' . $id_pemesanan)
+            ->with('success', 'Pemesanan berhasil diperbarui.');
+    }
+
+    /**
+     * Menghapus pemesanan
+     */
+    public function destroy($id_pemesanan)
+    {
+        $pemesanan = $this->pemesananModel->find($id_pemesanan);
+        if (!$pemesanan) {
+            return redirect()->to('/admin/pemesanan')->with('error', 'Pemesanan tidak ditemukan');
+        }
+
+        // Cek apakah pemesanan sudah completed, jika ya redirect ke detail
+        if ($pemesanan['status'] === 'completed') {
+            return redirect()->to('/admin/pemesanan/detail/' . $id_pemesanan)
+                ->with('error', 'Pemesanan yang sudah selesai tidak dapat dihapus');
+        }
+
+        // Hapus semua pembayaran terkait terlebih dahulu
+        $this->pembayaranModel->where('idpesan', $id_pemesanan)->delete();
+
+        // Hapus pemesanan
+        $this->pemesananModel->delete($id_pemesanan);
+
+        return redirect()->to('/admin/pemesanan')
+            ->with('success', 'Pemesanan berhasil dihapus.');
+    }
+
+    /**
+     * Mengirim email notifikasi perubahan pemesanan
+     */
+    private function sendBookingUpdateEmail($user, $pemesanan, $paket)
+    {
+        $this->email->setFrom('no-reply@elanglembahtourism.com', 'Elang Lembah Tourism');
+        $this->email->setTo($user['email']);
+        $this->email->setSubject('Perubahan Informasi Pemesanan - Elang Lembah Tourism');
+
+        $message = "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='utf-8'>
+            <title>Perubahan Informasi Pemesanan</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                }
+                .container {
+                    max-width: 600px;
+                    margin: 0 auto;
+                }
+                .header {
+                    background: #4e73df;
+                    color: #fff;
+                    padding: 20px;
+                    text-align: center;
+                }
+                .content {
+                    padding: 20px;
+                    background: #fff;
+                    border: 1px solid #ddd;
+                }
+                .footer {
+                    text-align: center;
+                    padding: 10px;
+                    font-size: 12px;
+                    color: #777;
+                }
+                .booking-details {
+                    background: #f9f9f9;
+                    padding: 15px;
+                    border-radius: 5px;
+                    margin: 15px 0;
+                }
+                .btn {
+                    display: inline-block;
+                    padding: 10px 15px;
+                    background: #4e73df;
+                    color: #fff;
+                    text-decoration: none;
+                    border-radius: 5px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <h2>Perubahan Informasi Pemesanan</h2>
+                </div>
+                <div class='content'>
+                    <p>Halo, <strong>{$user['name']}</strong>,</p>
+                    
+                    <p>Informasi pemesanan Anda telah diperbarui oleh admin kami. Detail pemesanan yang diperbarui adalah sebagai berikut:</p>
+                    
+                    <div class='booking-details'>
+                        <p><strong>Paket Wisata:</strong> {$paket['namapaket']}</p>
+                        <p><strong>Tanggal Keberangkatan:</strong> " . date('d-m-Y', strtotime($pemesanan['tgl_berangkat'])) . "</p>
+                        <p><strong>Jumlah Peserta:</strong> {$pemesanan['jumlah_peserta']} orang</p>
+                        <p><strong>Total Biaya:</strong> Rp " . number_format($pemesanan['totalbiaya'], 0, ',', '.') . "</p>
+                    </div>
+                    
+                    <p>Silakan login ke akun Anda untuk melihat detail pemesanan atau hubungi customer service kami jika Anda memiliki pertanyaan.</p>
+                    
+                    <p>Terima kasih telah memilih Elang Lembah Tourism.</p>
+                </div>
+                <div class='footer'>
+                    <p>© " . date('Y') . " Elang Lembah Tourism. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        ";
+
+        $this->email->setMessage($message);
+
+        // Coba kirim email
+        if ($this->email->send()) {
+            return true;
+        } else {
+            log_message('error', 'Failed to send booking update email: ' . $this->email->printDebugger(['headers']));
             return false;
         }
     }

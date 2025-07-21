@@ -15,6 +15,16 @@
 
 <div class="card">
     <div class="card-body">
+        <div class="d-flex align-items-center">
+            <h5 class="mb-0">Daftar Pemesanan</h5>
+            <div class="ms-auto">
+                <a href="<?= base_url('admin/pemesanan/create') ?>" class="btn btn-primary px-3">
+                    <i class="bx bx-plus me-1"></i>Buat Pemesanan Baru
+                </a>
+            </div>
+        </div>
+        <hr>
+
         <div class="row mb-3">
             <div class="col-md-3">
                 <label class="form-label">Filter Status Pemesanan</label>
@@ -119,7 +129,14 @@
                     data: 'namapaket'
                 },
                 {
-                    data: 'nama_pelanggan'
+                    data: 'nama_pelanggan',
+                    render: function(data, type, row) {
+                        let result = data;
+                        if (row.catatan === "pemesanan dilakukan oleh admin") {
+                            result += ' <span class="badge bg-info text-white" title="Dibuat oleh Admin"><i class="bx bx-user-check"></i> Admin</span>';
+                        }
+                        return result;
+                    }
                 },
                 {
                     data: 'tanggal'
@@ -165,12 +182,35 @@
                 {
                     data: 'idpesan',
                     orderable: false,
-                    render: function(data) {
-                        return `
+                    render: function(data, type, row) {
+                        let buttons = `
                         <a href="/admin/pemesanan/detail/${data}" class="btn btn-sm btn-info">
                             <i class="bx bx-search"></i> Detail
                         </a>
                         `;
+
+                        // Tambahkan tombol edit dan hapus jika status bukan completed
+                        if (row.status !== 'completed') {
+                            buttons += `
+                            <a href="/admin/pemesanan/edit/${data}" class="btn btn-sm btn-warning ms-1">
+                                <i class="bx bx-edit"></i> Edit
+                            </a>
+                            <a href="#" onclick="confirmDelete(${data})" class="btn btn-sm btn-danger ms-1">
+                                <i class="bx bx-trash"></i> Hapus
+                            </a>
+                            `;
+
+                            // Tambahkan tombol ubah jadwal untuk pemesanan oleh admin
+                            if (row.catatan === "pemesanan dilakukan oleh admin") {
+                                buttons += `
+                                <a href="/admin/reschedule/createRequest/${data}" class="btn btn-sm btn-primary ms-1">
+                                    <i class="bx bx-calendar-edit"></i> Ubah Jadwal
+                                </a>
+                                `;
+                            }
+                        }
+
+                        return buttons;
                     }
                 }
             ],
@@ -250,4 +290,33 @@
         background: rgba(255, 255, 255, 0.9);
     }
 </style>
+
+<!-- Modal konfirmasi hapus -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Konfirmasi Hapus</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Apakah Anda yakin ingin menghapus pemesanan ini? Semua data pembayaran terkait juga akan dihapus.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <a href="#" id="btn-delete" class="btn btn-danger">Hapus</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmDelete(id) {
+        // Set URL untuk tombol hapus
+        document.getElementById('btn-delete').href = `/admin/pemesanan/destroy/${id}`;
+        // Tampilkan modal konfirmasi
+        var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        deleteModal.show();
+    }
+</script>
 <?= $this->endSection() ?>

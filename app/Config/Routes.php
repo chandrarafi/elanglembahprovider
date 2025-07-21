@@ -46,6 +46,7 @@ $routes->group('booking', ['filter' => 'auth'], function ($routes) {
 // Admin routes (perlu filter auth dan role admin)
 $routes->group('admin', ['filter' => ['auth', 'role:admin']], function ($routes) {
     $routes->get('/', 'Admin::index');
+    $routes->get('dashboard', 'Admin::index');
 
     // User Management
     $routes->get('users', 'Admin::users');
@@ -55,6 +56,12 @@ $routes->group('admin', ['filter' => ['auth', 'role:admin']], function ($routes)
     $routes->post('createUser', 'Admin::createUser');
     $routes->post('updateUser/(:num)', 'Admin::updateUser/$1');
     $routes->delete('deleteUser/(:num)', 'Admin::deleteUser/$1');
+
+    // User Report
+    $routes->get('users/report', 'Admin::usersReport');
+    $routes->get('getUsersReport', 'Admin::getUsersReport');
+    $routes->get('generateUserReportPDF', 'Admin::generateUserReportPDF');
+    $routes->get('generateUserReportPrint', 'Admin::generateUserReportPrint');
 
     // Kategori Management
     $routes->get('kategori', 'Kategori::admin');
@@ -90,11 +97,16 @@ $routes->group('admin', ['filter' => ['auth', 'role:admin']], function ($routes)
     $routes->post('pemesanan/verifyPayment/(:num)', 'Admin\Pemesanan::verifyPayment/$1');
     $routes->get('pemesanan/create', 'Admin\Pemesanan::create');
     $routes->post('pemesanan/store', 'Admin\Pemesanan::store');
+    $routes->get('pemesanan/edit/(:num)', 'Admin\Pemesanan::edit/$1');
+    $routes->post('pemesanan/update/(:num)', 'Admin\Pemesanan::update/$1');
+    $routes->get('pemesanan/destroy/(:num)', 'Admin\Pemesanan::destroy/$1');
 
 
     $routes->get('reschedule', 'Admin\RescheduleRequest::index');
     $routes->get('reschedule/view/(:num)', 'Admin\RescheduleRequest::view/$1');
     $routes->post('reschedule/process', 'Admin\RescheduleRequest::process');
+    $routes->get('reschedule/createRequest/(:num)', 'Admin\RescheduleRequest::createRequest/$1');
+    $routes->post('reschedule/submitRequest', 'Admin\RescheduleRequest::submitRequest');
 });
 
 // Tambahkan routes berikut
@@ -130,3 +142,29 @@ $routes->get('reschedule/request/(:num)', 'Reschedule::request/$1');
 $routes->post('reschedule/submit', 'Reschedule::submit');
 $routes->get('reschedule/history/(:num)', 'Reschedule::history/$1');
 $routes->get('reschedule/cancel/(:num)', 'Reschedule::cancel/$1');
+
+// Paket Wisata Report Routes
+$routes->get('/admin/paket-wisata/report', 'Admin::paketWisataReport');
+$routes->get('/admin/paket-wisata/get-report', 'Admin::getPaketWisataReport');
+$routes->get('/admin/paket-wisata/report-pdf', 'Admin::generatePaketWisataReportPDF');
+$routes->get('/admin/paket-wisata/report-print', 'Admin::generatePaketWisataReportPrint');
+
+// Pelanggan Report Routes
+$routes->get('/admin/pelanggan/report', 'Pelanggan::report');
+$routes->get('/admin/pelanggan/get-report', 'Pelanggan::getReport');
+$routes->get('/admin/pelanggan/report-pdf', 'Pelanggan::generateReportPDF');
+$routes->get('/admin/pelanggan/report-print', 'Pelanggan::generateReportPrint');
+
+// Pemesanan Report Routes
+$routes->get('/admin/pemesanan/report', 'Admin::pemesananReport');
+$routes->get('/admin/getPemesananReport', 'Admin::getPemesananReport');
+$routes->get('/admin/generatePemesananReportPDF', 'Admin::generatePemesananReportPDF');
+$routes->get('/admin/generatePemesananReportPrint', 'Admin::generatePemesananReportPrint');
+
+// Simplified Pelanggan Report Route
+$routes->get('/admin/pelanggan-report', 'PelangganReport::index');
+
+// Direct view route - simplest possible approach
+$routes->get('/admin/pelanggan-simple', function () {
+    return view('admin/pelanggan/simple_report');
+});

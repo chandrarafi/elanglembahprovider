@@ -188,9 +188,23 @@ class PemesananModel extends Model
             $builder->where('p.status', $filters['status']);
         }
 
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
-            $builder->where('p.tanggal >=', $filters['start_date']);
-            $builder->where('p.tanggal <=', $filters['end_date'] . ' 23:59:59');
+        // Apply date filters
+        if (!empty($filters['start_date'])) {
+            // Add time to start date if not present
+            $startDate = $filters['start_date'];
+            if (strlen($startDate) == 10) { // YYYY-MM-DD
+                $startDate .= ' 00:00:00';
+            }
+            $builder->where('p.tanggal >=', $startDate);
+        }
+
+        if (!empty($filters['end_date'])) {
+            // Add time to end date if not present
+            $endDate = $filters['end_date'];
+            if (strlen($endDate) == 10) { // YYYY-MM-DD
+                $endDate .= ' 23:59:59';
+            }
+            $builder->where('p.tanggal <=', $endDate);
         }
 
         if (!empty($filters['search'])) {
@@ -229,9 +243,23 @@ class PemesananModel extends Model
             $builder->where('p.status', $filters['status']);
         }
 
-        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
-            $builder->where('p.tanggal >=', $filters['start_date']);
-            $builder->where('p.tanggal <=', $filters['end_date'] . ' 23:59:59');
+        // Apply date filters
+        if (!empty($filters['start_date'])) {
+            // Add time to start date if not present
+            $startDate = $filters['start_date'];
+            if (strlen($startDate) == 10) { // YYYY-MM-DD
+                $startDate .= ' 00:00:00';
+            }
+            $builder->where('p.tanggal >=', $startDate);
+        }
+
+        if (!empty($filters['end_date'])) {
+            // Add time to end date if not present
+            $endDate = $filters['end_date'];
+            if (strlen($endDate) == 10) { // YYYY-MM-DD
+                $endDate .= ' 23:59:59';
+            }
+            $builder->where('p.tanggal <=', $endDate);
         }
 
         if (!empty($filters['search'])) {

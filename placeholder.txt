@@ -1,0 +1,17 @@
+Untuk menyelesaikan implementasi fitur bank dan QRIS, silakan tambahkan gambar-gambar berikut di direktori public/assets/images/:
+
+1. bca-logo.png - Logo Bank BCA
+2. mandiri-logo.png - Logo Bank Mandiri
+3. bni-logo.png - Logo Bank BNI
+4. bri-logo.png - Logo Bank BRI
+5. qris-logo.png - Logo QRIS
+6. qris-example.png - Contoh kode QR QRIS
+7. bank.png - Logo bank default/fallback
+8. qr-code.png - QR code default/fallback
+
+Logo-logo bank dapat diambil dari website resmi masing-masing bank atau menggunakan logo placeholder.
+
+Pastikan semua gambar berada di path:
+/public/assets/images/
+
+Jika gambar-gambar tersebut tidak ditemukan, sistem akan menggunakan gambar fallback yang sudah ditentukan. 

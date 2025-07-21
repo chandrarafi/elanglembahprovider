@@ -428,4 +428,136 @@ class Pelanggan extends BaseController
             ])->setStatusCode(500);
         }
     }
+
+    // Report methods
+    public function report()
+    {
+        // Just return the simple report view with no data
+        return view('admin/pelanggan/simple_report');
+    }
+
+    public function getReport()
+    {
+        // Default to empty data
+        $data = [];
+
+        // Try to get data from database
+        try {
+            $pelangganList = $this->pelangganModel->findAll();
+
+            foreach ($pelangganList as $row) {
+                // Get user data if iduser exists
+                $userData = [];
+                if (!empty($row['iduser'])) {
+                    $userData = $this->userModel->find($row['iduser']) ?? [];
+                }
+
+                $data[] = [
+                    'idpelanggan' => $row['idpelanggan'],
+                    'namapelanggan' => $row['namapelanggan'],
+                    'email' => $userData['email'] ?? '-',
+                    'nohp' => $row['nohp'] ?? '-',
+                    'alamat' => $row['alamat'] ?? '-',
+                    'username' => $userData['username'] ?? '-',
+                    'role' => $userData['role'] ?? '-',
+                    'created_at' => $row['created_at']
+                ];
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail
+            log_message('error', 'Error fetching pelanggan data: ' . $e->getMessage());
+        }
+
+        // Always return data, even if empty
+        return $this->response->setJSON(['data' => $data]);
+    }
+
+    public function generateReportPDF()
+    {
+        // Increase execution time limit for large reports
+        ini_set('max_execution_time', 300); // 5 minutes
+
+        // Default to empty data
+        $pelanggan = [];
+
+        // Try to get data from database
+        try {
+            $pelangganList = $this->pelangganModel->findAll();
+
+            foreach ($pelangganList as $row) {
+                // Get user data if iduser exists
+                $userData = [];
+                if (!empty($row['iduser'])) {
+                    $userData = $this->userModel->find($row['iduser']) ?? [];
+                }
+
+                // Merge pelanggan and user data
+                $pelanggan[] = array_merge($row, [
+                    'email' => $userData['email'] ?? '-',
+                    'username' => $userData['username'] ?? '-',
+                    'role' => $userData['role'] ?? '-'
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Log error but continue with empty data
+            log_message('error', 'Error fetching pelanggan data for PDF: ' . $e->getMessage());
+        }
+
+        $data = [
+            'pelanggan' => $pelanggan,
+            'tanggal' => date('d-m-Y')
+        ];
+
+        $html = view('admin/pelanggan/pdf_report', $data);
+
+        // Create instance of dompdf
+        $options = new \Dompdf\Options();
+        $options->setIsRemoteEnabled(true);
+        $options->setIsHtml5ParserEnabled(true);
+
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+
+        // Output the generated PDF
+        $dompdf->stream('laporan-pelanggan-' . date('d-m-Y') . '.pdf', ['Attachment' => false]);
+        exit();
+    }
+
+    public function generateReportPrint()
+    {
+        // Default to empty data
+        $pelanggan = [];
+
+        // Try to get data from database
+        try {
+            $pelangganList = $this->pelangganModel->findAll();
+
+            foreach ($pelangganList as $row) {
+                // Get user data if iduser exists
+                $userData = [];
+                if (!empty($row['iduser'])) {
+                    $userData = $this->userModel->find($row['iduser']) ?? [];
+                }
+
+                // Merge pelanggan and user data
+                $pelanggan[] = array_merge($row, [
+                    'email' => $userData['email'] ?? '-',
+                    'username' => $userData['username'] ?? '-',
+                    'role' => $userData['role'] ?? '-'
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Log error but continue with empty data
+            log_message('error', 'Error fetching pelanggan data for print: ' . $e->getMessage());
+        }
+
+        $data = [
+            'pelanggan' => $pelanggan,
+            'tanggal' => date('d-m-Y')
+        ];
+
+        return view('admin/pelanggan/print_report', $data);
+    }
 }

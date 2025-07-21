@@ -29,6 +29,17 @@
             </div>
         <?php endif; ?>
 
+        <div class="d-flex align-items-center mb-3">
+            <div class="me-auto">
+                <h5 class="mb-0">Daftar Permintaan Perubahan Jadwal</h5>
+            </div>
+            <div>
+                <a href="/admin/pemesanan" class="btn btn-primary px-3">
+                    <i class="bx bx-plus me-1"></i>Buat Perubahan Jadwal Baru
+                </a>
+            </div>
+        </div>
+
         <div class="row mb-3">
             <div class="col-md-6">
                 <label class="form-label">Filter Status</label>

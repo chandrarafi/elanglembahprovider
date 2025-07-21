@@ -19,12 +19,12 @@
                 <div class="menu-title">Dashboard</div>
             </a>
         </li>
-        <li>
-            <a href="<?= base_url('admin/users') ?>">
-                <div class="parent-icon"><i class='bx bx-user'></i>
-                </div>
-                <div class="menu-title">Kelola User</div>
-            </a>
+        <li></li>
+        <a href="<?= base_url('admin/users') ?>">
+            <div class="parent-icon"><i class='bx bx-user'></i>
+            </div>
+            <div class="menu-title">Manajemen User</div>
+        </a>
         </li>
         <li>
             <a href="<?= base_url('admin/pelanggan') ?>">
@@ -56,10 +56,40 @@
         </li>
         <li>
             <a href="<?= base_url('admin/reschedule') ?>">
-                <div class="parent-icon"><i class='bx bx-calendar-check'></i>
+                <div class="parent-icon"><i class='bx bx-calendar-edit'></i>
                 </div>
                 <div class="menu-title">Kelola Ubah Jadwal</div>
             </a>
+        </li>
+        <!-- Nav Item - Reports Collapse Menu -->
+        <li>
+            <a href="javascript:;" class="has-arrow">
+                <div class="parent-icon"><i class='bx bx-chart'></i>
+                </div>
+                <div class="menu-title">Laporan</div>
+            </a>
+            <ul>
+                <li>
+                    <a href="<?= base_url('admin/users/report') ?>">
+                        <i class="bx bx-right-arrow-alt"></i>Laporan User
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= base_url('admin/pelanggan/report') ?>">
+                        <i class="bx bx-right-arrow-alt"></i>Laporan Pelanggan
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= base_url('admin/paket-wisata/report') ?>">
+                        <i class="bx bx-right-arrow-alt"></i>Laporan Paket Wisata
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= base_url('admin/pemesanan/report') ?>">
+                        <i class="bx bx-right-arrow-alt"></i>Laporan Pemesanan
+                    </a>
+                </li>
+            </ul>
         </li>
     </ul>
     <!--end navigation-->
