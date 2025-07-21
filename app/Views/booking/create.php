@@ -191,7 +191,7 @@
         tglBerangkat.addEventListener('change', function() {
             if (durasiPaket && tglBerangkat.value) {
                 let tanggalSelesai = new Date(tglBerangkat.value);
-                tanggalSelesai.setDate(tanggalSelesai.getDate() + durasiPaket - 1);
+                tanggalSelesai.setDate(tanggalSelesai.getDate() + durasiPaket + 1);
 
                 // Format tanggal untuk input date (YYYY-MM-DD)
                 const year = tanggalSelesai.getFullYear();

@@ -201,7 +201,7 @@ class RescheduleRequest extends BaseController
             'idpesan' => 'required|numeric',
             'current_tgl_berangkat' => 'required|valid_date',
             'requested_tgl_berangkat' => 'required|valid_date',
-            'alasan' => 'required|min_length[10]',
+            'alasan' => 'required',
         ];
 
         if (!$this->validate($rules)) {

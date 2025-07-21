@@ -30,7 +30,7 @@
                     <option value="daily">Per-Tanggal</option>
                     <option value="monthly">Bulanan</option>
                     <option value="yearly">Tahunan</option>
-                    <option value="custom">Custom Range</option>
+                    <!-- <option value="custom">Custom Range</option> -->
                 </select>
             </div>
 

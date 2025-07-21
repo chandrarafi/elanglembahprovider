@@ -89,6 +89,11 @@
                         <i class="bx bx-right-arrow-alt"></i>Laporan Pemesanan
                     </a>
                 </li>
+                <li>
+                    <a href="<?= base_url('admin/pembayaranReport') ?>">
+                        <i class="bx bx-right-arrow-alt"></i>Laporan Pembayaran
+                    </a>
+                </li>
             </ul>
         </li>
     </ul>

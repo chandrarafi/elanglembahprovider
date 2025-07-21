@@ -161,6 +161,12 @@ $routes->get('/admin/getPemesananReport', 'Admin::getPemesananReport');
 $routes->get('/admin/generatePemesananReportPDF', 'Admin::generatePemesananReportPDF');
 $routes->get('/admin/generatePemesananReportPrint', 'Admin::generatePemesananReportPrint');
 
+// Payment Reports
+$routes->get('admin/pembayaranReport', 'Admin::pembayaranReport');
+$routes->get('admin/getPembayaranReport', 'Admin::getPembayaranReport');
+$routes->get('admin/generatePembayaranReportPrint', 'Admin::generatePembayaranReportPrint');
+$routes->get('admin/generatePembayaranReportPDF', 'Admin::generatePembayaranReportPDF');
+
 // Simplified Pelanggan Report Route
 $routes->get('/admin/pelanggan-report', 'PelangganReport::index');
 
