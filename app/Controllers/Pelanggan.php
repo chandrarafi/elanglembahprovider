@@ -3,19 +3,16 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
-use App\Models\PelangganModel;
 use App\Models\UserModel;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class Pelanggan extends BaseController
 {
-    protected $pelangganModel;
     protected $userModel;
     protected $db;
 
     public function __construct()
     {
-        $this->pelangganModel = new PelangganModel();
         $this->userModel = new UserModel();
         $this->db = \Config\Database::connect();
         helper('text'); // Load text helper for random_string
@@ -33,8 +30,11 @@ class Pelanggan extends BaseController
     {
         $request = $this->request->getGet();
 
-        // Get data with join to users table
-        $pelanggan = $this->pelangganModel->getPelangganWithUser();
+        // Get data from users table with role pelanggan
+        $builder = $this->db->table('users');
+        $builder->where('role', 'pelanggan');
+        $builder->where('deleted_at', null); // Exclude deleted users
+        $pelanggan = $builder->get()->getResultArray();
 
         // Total records
         $totalRecords = count($pelanggan);
@@ -46,11 +46,12 @@ class Pelanggan extends BaseController
 
             foreach ($pelanggan as $p) {
                 if (
-                    stripos($p['idpelanggan'], $searchValue) !== false ||
-                    stripos($p['namapelanggan'], $searchValue) !== false ||
-                    stripos($p['nohp'], $searchValue) !== false ||
-                    stripos($p['alamat'], $searchValue) !== false ||
-                    stripos($p['username'] ?? '', $searchValue) !== false
+                    stripos($p['id'], $searchValue) !== false ||
+                    stripos($p['name'], $searchValue) !== false ||
+                    stripos($p['phone'] ?? '', $searchValue) !== false ||
+                    stripos($p['address'] ?? '', $searchValue) !== false ||
+                    stripos($p['username'] ?? '', $searchValue) !== false ||
+                    stripos($p['email'] ?? '', $searchValue) !== false
                 ) {
                     $filteredData[] = $p;
                 }
@@ -99,114 +100,62 @@ class Pelanggan extends BaseController
         // Log data yang diterima
         log_message('debug', 'Data pelanggan: ' . json_encode($data));
 
-        // Generate kode pelanggan otomatis
-        $data['idpelanggan'] = $this->pelangganModel->generateKode();
-
-        // Check if create user account is requested
-        $createUser = isset($data['create_user']) && $data['create_user'] == '1';
-        $userData = null;
-
         try {
-            // Start transaction
-            $this->db->transBegin();
+            // Prepare user data
+            $userData = [
+                'username' => $this->generateUsername($data['name']),
+                'email' => $data['email'] ?? $this->generateUsername($data['name']) . '@example.com',
+                'password' => '123456', // Password default
+                'name' => $data['name'],
+                'role' => 'pelanggan',
+                'status' => 'active',
+                'phone' => $data['phone'] ?? null,
+                'address' => $data['address'] ?? null
+            ];
 
-            // Validasi email jika akan membuat akun user
-            if ($createUser) {
-                if (empty($data['email'])) {
-                    return $this->response->setJSON([
-                        'status' => 'error',
-                        'message' => 'Email diperlukan untuk membuat akun user',
-                        'errors' => ['email' => 'Email harus diisi']
-                    ])->setStatusCode(400);
-                }
-
-                // Cek apakah email sudah digunakan
-                $existingUser = $this->userModel->where('email', $data['email'])->first();
-                if ($existingUser) {
-                    return $this->response->setJSON([
-                        'status' => 'error',
-                        'message' => 'Email sudah digunakan',
-                        'errors' => ['email' => 'Email sudah digunakan oleh akun lain']
-                    ])->setStatusCode(400);
-                }
-
-                log_message('debug', 'Membuat akun user dengan email: ' . $data['email']);
-
-                try {
-                    $userData = $this->pelangganModel->createUserAccount([
-                        'namapelanggan' => $data['namapelanggan'],
-                        'email' => $data['email']
-                    ]);
-                } catch (\mysqli_sql_exception $e) {
-                    // Tangkap khusus error duplicate entry
-                    $this->db->transRollback();
-                    log_message('error', 'SQL Error saat membuat akun user: ' . $e->getMessage());
-
-                    // Periksa apakah error adalah duplicate email
-                    if (strpos($e->getMessage(), 'Duplicate entry') !== false && strpos($e->getMessage(), 'email') !== false) {
-                        return $this->response->setJSON([
-                            'status' => 'error',
-                            'message' => 'Email sudah digunakan oleh akun lain',
-                            'errors' => ['email' => 'Email sudah digunakan oleh akun lain']
-                        ])->setStatusCode(400);
-                    }
-
-                    // Error SQL lainnya
-                    return $this->response->setJSON([
-                        'status' => 'error',
-                        'message' => 'Terjadi kesalahan database saat membuat akun user'
-                    ])->setStatusCode(500);
-                }
-
-                log_message('debug', 'Hasil createUserAccount: ' . json_encode($userData));
-
-                if ($userData) {
-                    $data['iduser'] = $userData['user_id'];
-                    log_message('debug', 'ID User yang dibuat: ' . $userData['user_id']);
-                } else {
-                    $this->db->transRollback();
-                    log_message('error', 'Gagal membuat akun user');
-                    return $this->response->setJSON([
-                        'status' => 'error',
-                        'message' => 'Gagal membuat akun user'
-                    ])->setStatusCode(500);
-                }
-            }
-
-            // Remove non-model fields
-            unset($data['create_user']);
-            unset($data['email']);
-
-            // Insert pelanggan
-            if (!$this->pelangganModel->insert($data)) {
-                $this->db->transRollback();
-                log_message('error', 'Validasi gagal: ' . json_encode($this->pelangganModel->errors()));
+            // Cek apakah email sudah digunakan
+            $existingUser = $this->userModel->where('email', $userData['email'])->first();
+            if ($existingUser) {
                 return $this->response->setJSON([
                     'status' => 'error',
-                    'message' => 'Validasi gagal',
-                    'errors' => $this->pelangganModel->errors()
+                    'message' => 'Email sudah digunakan',
+                    'errors' => ['email' => 'Email sudah digunakan oleh akun lain']
                 ])->setStatusCode(400);
             }
 
-            // Commit transaction
-            $this->db->transCommit();
+            // Cek apakah username sudah ada, jika ada tambahkan angka di belakangnya
+            $baseUsername = $userData['username'];
+            $username = $baseUsername;
+            $counter = 1;
+            while ($this->userModel->where('username', $username)->first()) {
+                $username = $baseUsername . $counter;
+                $counter++;
+            }
+            $userData['username'] = $username;
 
-            $response = [
-                'status' => 'success',
-                'message' => 'Pelanggan berhasil ditambahkan'
-            ];
+            log_message('debug', 'Data user yang akan dibuat: ' . json_encode($userData));
 
-            // Add user account info to response if created
-            if ($userData) {
-                $response['user_account'] = [
-                    'username' => $userData['username'],
-                    'password' => $userData['password']
-                ];
+            // Insert user
+            $userId = $this->userModel->insert($userData);
+
+            if (!$userId) {
+                log_message('error', 'Validasi gagal: ' . json_encode($this->userModel->errors()));
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Validasi gagal',
+                    'errors' => $this->userModel->errors()
+                ])->setStatusCode(400);
             }
 
-            return $this->response->setJSON($response);
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Pelanggan berhasil ditambahkan',
+                'user_account' => [
+                    'username' => $userData['username'],
+                    'password' => $userData['password']
+                ]
+            ]);
         } catch (\Exception $e) {
-            $this->db->transRollback();
             log_message('error', 'Error saat menambahkan pelanggan: ' . $e->getMessage());
             return $this->response->setJSON([
                 'status' => 'error',
@@ -224,19 +173,8 @@ class Pelanggan extends BaseController
             ])->setStatusCode(400);
         }
 
-        $pelanggan = $this->pelangganModel->getPelangganWithUser($id);
+        $pelanggan = $this->userModel->find($id);
         if ($pelanggan) {
-            // Get email from user if exists
-            if (!empty($pelanggan['iduser'])) {
-                $user = $this->userModel->find($pelanggan['iduser']);
-                if ($user) {
-                    $pelanggan['email'] = $user['email'];
-                    $pelanggan['has_account'] = true;
-                }
-            } else {
-                $pelanggan['has_account'] = false;
-            }
-
             return $this->response->setJSON([
                 'status' => 'success',
                 'data' => $pelanggan
@@ -263,7 +201,7 @@ class Pelanggan extends BaseController
         // Log data yang diterima
         log_message('debug', 'Data update pelanggan: ' . json_encode($data));
 
-        $pelanggan = $this->pelangganModel->find($id);
+        $pelanggan = $this->userModel->find($id);
 
         if (!$pelanggan) {
             return $this->response->setJSON([
@@ -272,61 +210,19 @@ class Pelanggan extends BaseController
             ])->setStatusCode(404);
         }
 
-        // Check if create user account is requested
-        $createUser = isset($data['create_user']) && $data['create_user'] == '1';
-        $userData = null;
-
         try {
-            // Start transaction
-            $this->db->transBegin();
+            // Prepare user data for update
+            $userData = [
+                'name' => $data['name'] ?? $pelanggan['name'],
+                'phone' => $data['phone'] ?? $pelanggan['phone'],
+                'address' => $data['address'] ?? $pelanggan['address']
+            ];
 
-            // Create user account if requested and pelanggan doesn't have one
-            if ($createUser && empty($pelanggan['iduser'])) {
-                if (empty($data['email'])) {
-                    return $this->response->setJSON([
-                        'status' => 'error',
-                        'message' => 'Email diperlukan untuk membuat akun user',
-                        'errors' => ['email' => 'Email harus diisi']
-                    ])->setStatusCode(400);
-                }
-
-                // Cek apakah email sudah digunakan
-                $existingUser = $this->userModel->where('email', $data['email'])->first();
-                if ($existingUser) {
-                    return $this->response->setJSON([
-                        'status' => 'error',
-                        'message' => 'Email sudah digunakan',
-                        'errors' => ['email' => 'Email sudah digunakan oleh akun lain']
-                    ])->setStatusCode(400);
-                }
-
-                log_message('debug', 'Membuat akun user dengan email: ' . $data['email']);
-
-                $userData = $this->pelangganModel->createUserAccount([
-                    'namapelanggan' => $data['namapelanggan'],
-                    'email' => $data['email']
-                ]);
-
-                log_message('debug', 'Hasil createUserAccount: ' . json_encode($userData));
-
-                if ($userData) {
-                    $data['iduser'] = $userData['user_id'];
-                    log_message('debug', 'ID User yang dibuat: ' . $userData['user_id']);
-                } else {
-                    $this->db->transRollback();
-                    log_message('error', 'Gagal membuat akun user');
-                    return $this->response->setJSON([
-                        'status' => 'error',
-                        'message' => 'Gagal membuat akun user'
-                    ])->setStatusCode(500);
-                }
-            }
-
-            // Update email if pelanggan already has an account
-            if (!empty($pelanggan['iduser']) && !empty($data['email'])) {
+            // Update email if provided and different
+            if (!empty($data['email']) && $data['email'] !== $pelanggan['email']) {
                 // Cek apakah email sudah digunakan oleh user lain
                 $existingUser = $this->userModel->where('email', $data['email'])
-                    ->where('id !=', $pelanggan['iduser'])
+                    ->where('id !=', $id)
                     ->first();
 
                 if ($existingUser) {
@@ -337,43 +233,24 @@ class Pelanggan extends BaseController
                     ])->setStatusCode(400);
                 }
 
-                $this->userModel->update($pelanggan['iduser'], ['email' => $data['email']]);
+                $userData['email'] = $data['email'];
             }
 
-            // Remove non-model fields
-            unset($data['create_user']);
-            unset($data['email']);
-
-            // Update pelanggan
-            if (!$this->pelangganModel->update($id, $data)) {
-                $this->db->transRollback();
-                log_message('error', 'Validasi gagal: ' . json_encode($this->pelangganModel->errors()));
+            // Update user
+            if (!$this->userModel->update($id, $userData)) {
+                log_message('error', 'Validasi gagal: ' . json_encode($this->userModel->errors()));
                 return $this->response->setJSON([
                     'status' => 'error',
                     'message' => 'Validasi gagal',
-                    'errors' => $this->pelangganModel->errors()
+                    'errors' => $this->userModel->errors()
                 ])->setStatusCode(400);
             }
 
-            // Commit transaction
-            $this->db->transCommit();
-
-            $response = [
+            return $this->response->setJSON([
                 'status' => 'success',
                 'message' => 'Pelanggan berhasil diupdate'
-            ];
-
-            // Add user account info to response if created
-            if ($userData) {
-                $response['user_account'] = [
-                    'username' => $userData['username'],
-                    'password' => $userData['password']
-                ];
-            }
-
-            return $this->response->setJSON($response);
+            ]);
         } catch (\Exception $e) {
-            $this->db->transRollback();
             log_message('error', 'Error saat mengupdate pelanggan: ' . $e->getMessage());
             return $this->response->setJSON([
                 'status' => 'error',
@@ -392,35 +269,19 @@ class Pelanggan extends BaseController
         }
 
         try {
-            // Get pelanggan data
-            $pelanggan = $this->pelangganModel->find($id);
-            if (!$pelanggan) {
+            // Soft delete user
+            if (!$this->userModel->delete($id)) {
                 return $this->response->setJSON([
                     'status' => 'error',
-                    'message' => 'Pelanggan tidak ditemukan'
-                ])->setStatusCode(404);
+                    'message' => 'Gagal menghapus pelanggan'
+                ])->setStatusCode(500);
             }
-
-            // Start transaction
-            $this->db->transBegin();
-
-            // Delete user account if exists
-            if (!empty($pelanggan['iduser'])) {
-                $this->userModel->delete($pelanggan['iduser']);
-            }
-
-            // Delete pelanggan
-            $this->pelangganModel->delete($id);
-
-            // Commit transaction
-            $this->db->transCommit();
 
             return $this->response->setJSON([
                 'status' => 'success',
                 'message' => 'Pelanggan berhasil dihapus'
             ]);
         } catch (\Exception $e) {
-            $this->db->transRollback();
             log_message('error', 'Error saat menghapus pelanggan: ' . $e->getMessage());
             return $this->response->setJSON([
                 'status' => 'error',
@@ -433,7 +294,7 @@ class Pelanggan extends BaseController
     public function report()
     {
         // Just return the simple report view with no data
-        return view('admin/pelanggan/simple_report');
+        return view('admin/pelanggan/report');
     }
 
     public function getReport()
@@ -443,23 +304,17 @@ class Pelanggan extends BaseController
 
         // Try to get data from database
         try {
-            $pelangganList = $this->pelangganModel->findAll();
+            $builder = $this->db->table('users');
+            $builder->where('role', 'pelanggan');
+            $builder->where('deleted_at', null); // Exclude deleted users
+            $pelangganList = $builder->get()->getResultArray();
 
             foreach ($pelangganList as $row) {
-                // Get user data if iduser exists
-                $userData = [];
-                if (!empty($row['iduser'])) {
-                    $userData = $this->userModel->find($row['iduser']) ?? [];
-                }
-
                 $data[] = [
-                    'idpelanggan' => $row['idpelanggan'],
-                    'namapelanggan' => $row['namapelanggan'],
-                    'email' => $userData['email'] ?? '-',
-                    'nohp' => $row['nohp'] ?? '-',
-                    'alamat' => $row['alamat'] ?? '-',
-                    'username' => $userData['username'] ?? '-',
-                    'role' => $userData['role'] ?? '-',
+                    'id' => $row['id'],
+                    'name' => $row['name'],
+                    'phone' => $row['phone'] ?? '-',
+                    'address' => $row['address'] ?? '-',
                     'created_at' => $row['created_at']
                 ];
             }
@@ -482,22 +337,10 @@ class Pelanggan extends BaseController
 
         // Try to get data from database
         try {
-            $pelangganList = $this->pelangganModel->findAll();
-
-            foreach ($pelangganList as $row) {
-                // Get user data if iduser exists
-                $userData = [];
-                if (!empty($row['iduser'])) {
-                    $userData = $this->userModel->find($row['iduser']) ?? [];
-                }
-
-                // Merge pelanggan and user data
-                $pelanggan[] = array_merge($row, [
-                    'email' => $userData['email'] ?? '-',
-                    'username' => $userData['username'] ?? '-',
-                    'role' => $userData['role'] ?? '-'
-                ]);
-            }
+            $builder = $this->db->table('users');
+            $builder->where('role', 'pelanggan');
+            $builder->where('deleted_at', null); // Exclude deleted users
+            $pelanggan = $builder->get()->getResultArray();
         } catch (\Exception $e) {
             // Log error but continue with empty data
             log_message('error', 'Error fetching pelanggan data for PDF: ' . $e->getMessage());
@@ -532,22 +375,10 @@ class Pelanggan extends BaseController
 
         // Try to get data from database
         try {
-            $pelangganList = $this->pelangganModel->findAll();
-
-            foreach ($pelangganList as $row) {
-                // Get user data if iduser exists
-                $userData = [];
-                if (!empty($row['iduser'])) {
-                    $userData = $this->userModel->find($row['iduser']) ?? [];
-                }
-
-                // Merge pelanggan and user data
-                $pelanggan[] = array_merge($row, [
-                    'email' => $userData['email'] ?? '-',
-                    'username' => $userData['username'] ?? '-',
-                    'role' => $userData['role'] ?? '-'
-                ]);
-            }
+            $builder = $this->db->table('users');
+            $builder->where('role', 'pelanggan');
+            $builder->where('deleted_at', null); // Exclude deleted users
+            $pelanggan = $builder->get()->getResultArray();
         } catch (\Exception $e) {
             // Log error but continue with empty data
             log_message('error', 'Error fetching pelanggan data for print: ' . $e->getMessage());
@@ -559,5 +390,19 @@ class Pelanggan extends BaseController
         ];
 
         return view('admin/pelanggan/print_report', $data);
+    }
+
+    /**
+     * Generate username from name
+     */
+    private function generateUsername($name)
+    {
+        // Convert to lowercase and remove spaces
+        $username = strtolower(str_replace(' ', '', $name));
+
+        // Remove special characters
+        $username = preg_replace('/[^a-z0-9]/', '', $username);
+
+        return $username;
     }
 }

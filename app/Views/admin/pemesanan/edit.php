@@ -234,15 +234,15 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($pelanggan as $p): ?>
+                            <?php foreach ($users as $p): ?>
                                 <tr>
-                                    <td><?= $p['namapelanggan'] ?></td>
-                                    <td><?= $p['nohp'] ?? '-' ?></td>
+                                    <td><?= $p['name'] ?></td>
+                                    <td><?= $p['phone'] ?? '-' ?></td>
                                     <td><?= $p['email'] ?? '-' ?></td>
                                     <td>
                                         <button type="button" class="btn btn-sm btn-primary pilih-pelanggan"
-                                            data-id="<?= $p['iduser'] ?>"
-                                            data-name="<?= $p['namapelanggan'] ?>">
+                                            data-id="<?= $p['id'] ?>"
+                                            data-name="<?= $p['name'] ?>">
                                             Pilih
                                         </button>
                                     </td>
@@ -255,7 +255,7 @@
                 <!-- Pagination -->
                 <div class="p-3 border-top">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div id="showingInfoPelanggan">Menampilkan 1 sampai 5 dari <?= count($pelanggan) ?> entri</div>
+                        <div id="showingInfoPelanggan">Menampilkan 1 sampai 5 dari <?= count($users) ?> entri</div>
                         <div>
                             <div class="btn-group">
                                 <button type="button" class="btn btn-sm btn-secondary" id="prevPagePelanggan">Sebelumnya</button>

@@ -3,20 +3,17 @@
 namespace App\Controllers;
 
 use App\Models\UserModel;
-use App\Models\PelangganModel;
 use App\Models\OtpModel;
 
 class Register extends BaseController
 {
     protected $userModel;
-    protected $pelangganModel;
     protected $otpModel;
     protected $email;
 
     public function __construct()
     {
         $this->userModel = new UserModel();
-        $this->pelangganModel = new PelangganModel();
         $this->otpModel = new OtpModel();
         $this->email = \Config\Services::email();
     }
@@ -78,20 +75,6 @@ class Register extends BaseController
 
             if (!$userId) {
                 throw new \RuntimeException('Gagal membuat akun user: ' . json_encode($this->userModel->errors()));
-            }
-
-            // Data untuk tabel pelanggan
-            $pelangganData = [
-                'idpelanggan' => $this->pelangganModel->generateKode(),
-                'namapelanggan' => $data['name'],
-                'alamat' => $data['address'] ?? null,
-                'nohp' => $data['phone'] ?? null,
-                'iduser' => $userId
-            ];
-
-            // Insert ke tabel pelanggan
-            if (!$this->pelangganModel->insert($pelangganData)) {
-                throw new \RuntimeException('Gagal membuat data pelanggan: ' . json_encode($this->pelangganModel->errors()));
             }
 
             // Buat OTP baru
@@ -437,16 +420,6 @@ class Register extends BaseController
         $this->email->setTo($user['email']);
         $this->email->setSubject('Aktivasi Akun Berhasil - Elang Lembah Provider');
 
-        // Ambil data pelanggan jika user adalah pelanggan
-        $pelangganData = [];
-        if ($user['role'] === 'pelanggan') {
-            $pelangganModel = new \App\Models\PelangganModel();
-            $pelanggan = $pelangganModel->where('iduser', $user['id'])->first();
-            if ($pelanggan) {
-                $pelangganData = $pelanggan;
-            }
-        }
-
         // Buat tanggal saat ini dengan format yang bagus
         $tanggal = date('d F Y H:i');
 
@@ -496,29 +469,21 @@ class Register extends BaseController
                             <td>{$user['email']}</td>
                         </tr>";
 
-        // Tambahkan info pelanggan jika ada
-        if (!empty($pelangganData)) {
+        // Tambahkan info kontak jika ada
+        if (!empty($user['phone'])) {
             $message .= "
                         <tr>
-                            <td>ID Pelanggan</td>
-                            <td>{$pelangganData['idpelanggan']}</td>
-                        </tr>";
-
-            if (!empty($pelangganData['nohp'])) {
-                $message .= "
-                        <tr>
                             <td>No. Telepon</td>
-                            <td>{$pelangganData['nohp']}</td>
+                            <td>{$user['phone']}</td>
                         </tr>";
-            }
+        }
 
-            if (!empty($pelangganData['alamat'])) {
-                $message .= "
+        if (!empty($user['address'])) {
+            $message .= "
                         <tr>
                             <td>Alamat</td>
-                            <td>{$pelangganData['alamat']}</td>
+                            <td>{$user['address']}</td>
                         </tr>";
-            }
         }
 
         $message .= "

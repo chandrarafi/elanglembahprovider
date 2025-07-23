@@ -84,10 +84,10 @@ $routes->group('admin', ['filter' => ['auth', 'role:admin']], function ($routes)
     // Pelanggan Management
     $routes->get('pelanggan', 'Pelanggan::index');
     $routes->get('getPelanggan', 'Pelanggan::getPelanggan');
-    $routes->get('pelanggan/(:segment)', 'Pelanggan::getPelangganById/$1');
+    $routes->get('getPelangganById/(:num)', 'Pelanggan::getPelangganById/$1');
     $routes->post('createPelanggan', 'Pelanggan::createPelanggan');
-    $routes->post('updatePelanggan/(:segment)', 'Pelanggan::updatePelanggan/$1');
-    $routes->delete('deletePelanggan/(:segment)', 'Pelanggan::deletePelanggan/$1');
+    $routes->post('updatePelanggan/(:num)', 'Pelanggan::updatePelanggan/$1');
+    $routes->delete('deletePelanggan/(:num)', 'Pelanggan::deletePelanggan/$1');
 
     // Pemesanan Management
     $routes->get('pemesanan', 'Admin\Pemesanan::index');

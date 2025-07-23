@@ -264,17 +264,14 @@
         </div>
 
         <!-- Table -->
-        <table>
+        <table class="table table-bordered">
             <thead>
                 <tr>
                     <th>No</th>
                     <th>ID</th>
                     <th>Nama</th>
-                    <th>Email</th>
                     <th>Telepon</th>
                     <th>Alamat</th>
-                    <th>Username</th>
-                    <th>Role</th>
                     <th>Tanggal Daftar</th>
                 </tr>
             </thead>
@@ -283,29 +280,17 @@
                     <?php $no = 1;
                     foreach ($pelanggan as $row): ?>
                         <tr>
-                            <td style="text-align: center;"><?= $no++ ?></td>
-                            <td><?= $row['idpelanggan'] ?></td>
-                            <td><?= $row['namapelanggan'] ?></td>
-                            <td><?= $row['email'] ?? '-' ?></td>
-                            <td><?= $row['nohp'] ?? '-' ?></td>
-                            <td><?= $row['alamat'] ?? '-' ?></td>
-                            <td><?= $row['username'] ?? '-' ?></td>
-                            <td style="text-align: center;">
-                                <?php
-                                $role = $row['role'] ?? '-';
-                                $roleClass = 'status-inactive';
-                                if ($role === 'admin') $roleClass = 'status-admin';
-                                else if ($role === 'direktur') $roleClass = 'status-direktur';
-                                else if ($role === 'pelanggan') $roleClass = 'status-active';
-                                ?>
-                                <span class="<?= $roleClass ?>"><?= $role ?></span>
-                            </td>
+                            <td class="text-center"><?= $no++ ?></td>
+                            <td><?= $row['id'] ?></td>
+                            <td><?= $row['name'] ?></td>
+                            <td><?= $row['phone'] ?? '-' ?></td>
+                            <td><?= $row['address'] ?? '-' ?></td>
                             <td><?= date('d-m-Y', strtotime($row['created_at'])) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="9" style="text-align: center;">Tidak ada data pelanggan yang tersedia</td>
+                        <td colspan="6" class="text-center">Tidak ada data pelanggan</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

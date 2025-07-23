@@ -29,6 +29,17 @@
         .company-info {
             float: left;
             width: 50%;
+            display: flex;
+            align-items: center;
+        }
+
+        .company-logo {
+            width: 80px;
+            margin-right: 15px;
+        }
+
+        .company-details {
+            display: inline-block;
         }
 
         .invoice-details {
@@ -142,9 +153,12 @@
     <div class="invoice-container">
         <div class="invoice-header">
             <div class="company-info">
-                <div class="invoice-title">ELANG LEMBAH TOURISM</div>
-                <div>Jl. Pariwisata No. 123, Kota Wisata</div>
-                <div>Telp: +62 812-3456-7890</div>
+                <img src="data:image/png;base64,<?= base64_encode(file_get_contents(ROOTPATH . 'public/assets/images/logo.png')) ?>" alt="Elang Lembah Provider" class="company-logo">
+                <div class="company-details">
+                    <div class="invoice-title">ELANG LEMBAH TOURISM</div>
+                    <div>Jl. Belati Barat IV No. 5, Lolong Belati, Padang Utara, Sumatera Barat</div>
+                    <div>Telp: +62 822-1095-5523</div>
+                </div>
             </div>
             <div class="invoice-details">
                 <div class="invoice-id">INVOICE: <?= $nomor_invoice ?></div>

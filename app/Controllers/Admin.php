@@ -467,25 +467,17 @@ class Admin extends ResourceController
         // Try to get data from database
         try {
             $db = \Config\Database::connect();
-            $query = $db->query('SELECT * FROM pelanggan');
-            $pelanggan = $query->getResultArray();
+            $builder = $db->table('users');
+            $builder->where('role', 'pelanggan');
+            $builder->where('deleted_at IS NULL');
+            $pelanggan = $builder->get()->getResultArray();
 
             foreach ($pelanggan as $row) {
-                // Get user data if iduser exists
-                $userData = [];
-                if (!empty($row['iduser'])) {
-                    $userQuery = $db->query('SELECT * FROM users WHERE id = ?', [$row['iduser']]);
-                    $userData = $userQuery->getRowArray() ?? [];
-                }
-
                 $data[] = [
-                    'idpelanggan' => $row['idpelanggan'],
-                    'namapelanggan' => $row['namapelanggan'],
-                    'email' => $userData['email'] ?? '-',
-                    'nohp' => $row['nohp'] ?? '-',
-                    'alamat' => $row['alamat'] ?? '-',
-                    'username' => $userData['username'] ?? '-',
-                    'role' => $userData['role'] ?? '-',
+                    'id' => $row['id'],
+                    'name' => $row['name'],
+                    'phone' => $row['phone'] ?? '-',
+                    'address' => $row['address'] ?? '-',
                     'created_at' => $row['created_at']
                 ];
             }
@@ -509,24 +501,10 @@ class Admin extends ResourceController
         // Try to get data from database
         try {
             $db = \Config\Database::connect();
-            $query = $db->query('SELECT * FROM pelanggan');
-            $pelangganList = $query->getResultArray();
-
-            foreach ($pelangganList as $row) {
-                // Get user data if iduser exists
-                $userData = [];
-                if (!empty($row['iduser'])) {
-                    $userQuery = $db->query('SELECT * FROM users WHERE id = ?', [$row['iduser']]);
-                    $userData = $userQuery->getRowArray() ?? [];
-                }
-
-                // Merge pelanggan and user data
-                $pelanggan[] = array_merge($row, [
-                    'email' => $userData['email'] ?? '-',
-                    'username' => $userData['username'] ?? '-',
-                    'role' => $userData['role'] ?? '-'
-                ]);
-            }
+            $builder = $db->table('users');
+            $builder->where('role', 'pelanggan');
+            $builder->where('deleted_at IS NULL');
+            $pelanggan = $builder->get()->getResultArray();
         } catch (\Exception $e) {
             // Log error but continue with empty data
             log_message('error', 'Error fetching pelanggan data for PDF: ' . $e->getMessage());
@@ -562,24 +540,10 @@ class Admin extends ResourceController
         // Try to get data from database
         try {
             $db = \Config\Database::connect();
-            $query = $db->query('SELECT * FROM pelanggan');
-            $pelangganList = $query->getResultArray();
-
-            foreach ($pelangganList as $row) {
-                // Get user data if iduser exists
-                $userData = [];
-                if (!empty($row['iduser'])) {
-                    $userQuery = $db->query('SELECT * FROM users WHERE id = ?', [$row['iduser']]);
-                    $userData = $userQuery->getRowArray() ?? [];
-                }
-
-                // Merge pelanggan and user data
-                $pelanggan[] = array_merge($row, [
-                    'email' => $userData['email'] ?? '-',
-                    'username' => $userData['username'] ?? '-',
-                    'role' => $userData['role'] ?? '-'
-                ]);
-            }
+            $builder = $db->table('users');
+            $builder->where('role', 'pelanggan');
+            $builder->where('deleted_at IS NULL');
+            $pelanggan = $builder->get()->getResultArray();
         } catch (\Exception $e) {
             // Log error but continue with empty data
             log_message('error', 'Error fetching pelanggan data for print: ' . $e->getMessage());

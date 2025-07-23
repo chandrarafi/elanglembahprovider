@@ -22,8 +22,29 @@
         .ticket-header {
             text-align: center;
             border-bottom: 2px solid #f59e0b;
-            padding-bottom: 10px;
+            padding-bottom: 20px;
             margin-bottom: 20px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .logo {
+            width: 80px;
+            height: auto;
+            margin-right: 20px;
+        }
+
+        .logo-text {
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            text-transform: uppercase;
+            line-height: 1.2;
         }
 
         .ticket-title {
@@ -109,6 +130,12 @@
 <body>
     <div class="ticket-container">
         <div class="ticket-header">
+            <div class="logo-container">
+                <img src="data:image/png;base64,<?= base64_encode(file_get_contents(ROOTPATH . 'public/assets/images/logo.png')) ?>" alt="Elang Lembah Provider" class="logo">
+                <div class="logo-text">
+                    ELANG LEMBAH<br>ADVENTURE
+                </div>
+            </div>
             <h1 class="ticket-title">ELANG LEMBAH TOURISM</h1>
             <div class="ticket-subtitle">E-Ticket / Bukti Pemesanan Paket Wisata</div>
             <div class="booking-code"><?= $pemesanan['kode_booking'] ?></div>
@@ -176,13 +203,13 @@
             <strong>Penting:</strong> E-ticket ini harus ditunjukkan pada saat keberangkatan. Harap datang setidaknya 30 menit sebelum jadwal keberangkatan.
         </div>
 
-        <div class="barcode">
+        <!-- <div class="barcode">
             <img src="<?= $qr_code ?>" alt="QR Code">
             <p>Scan QR Code untuk validasi</p>
-        </div>
+        </div> -->
 
         <div class="footer">
-            <p>Elang Lembah Tourism &copy; <?= date('Y') ?> | info@elanglembah.com | +62 812-3456-7890</p>
+            <p>Elang Lembah Tourism &copy; <?= date('Y') ?> | info@elanglembah.com | +62 822-1095-5523</p>
         </div>
     </div>
 </body>

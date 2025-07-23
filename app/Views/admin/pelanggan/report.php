@@ -29,11 +29,8 @@
                     <tr>
                         <th>ID</th>
                         <th>Nama</th>
-                        <th>Email</th>
                         <th>Telepon</th>
                         <th>Alamat</th>
-                        <th>Username</th>
-                        <th>Role</th>
                         <th>Tanggal Daftar</th>
                     </tr>
                 </thead>
@@ -110,7 +107,7 @@
     function loadReport() {
         // Show loading
         pelangganTable.clear().draw();
-        $('#dataTable tbody').html('<tr><td colspan="8" class="text-center">Loading...</td></tr>');
+        $('#dataTable tbody').html('<tr><td colspan="5" class="text-center">Loading...</td></tr>');
 
         $.ajax({
             url: '<?= base_url('admin/pelanggan/get-report') ?>',
@@ -122,33 +119,24 @@
                     $('#totalPelanggan').text(response.data.length);
 
                     response.data.forEach(function(pelanggan) {
-                        const role = pelanggan.role || '-';
-                        let roleBadge = 'bg-secondary';
-                        if (role === 'admin') roleBadge = 'bg-primary';
-                        else if (role === 'direktur') roleBadge = 'bg-info';
-                        else if (role === 'pelanggan') roleBadge = 'bg-success';
-
                         pelangganTable.row.add([
-                            pelanggan.idpelanggan,
-                            pelanggan.namapelanggan,
-                            pelanggan.email || '-',
-                            pelanggan.nohp || '-',
-                            pelanggan.alamat || '-',
-                            pelanggan.username || '-',
-                            `<span class="badge ${roleBadge}">${role}</span>`,
+                            pelanggan.id,
+                            pelanggan.name,
+                            pelanggan.phone || '-',
+                            pelanggan.address || '-',
                             new Date(pelanggan.created_at).toLocaleDateString('id-ID')
                         ]);
                     });
                 } else {
                     // If no data is available, show a message
-                    $('#dataTable tbody').html('<tr><td colspan="8" class="text-center">Tidak ada data pelanggan yang tersedia</td></tr>');
+                    $('#dataTable tbody').html('<tr><td colspan="5" class="text-center">Tidak ada data pelanggan yang tersedia</td></tr>');
                 }
 
                 pelangganTable.draw();
             },
             error: function(xhr) {
                 // Display a user-friendly message in the table instead of an error popup
-                $('#dataTable tbody').html('<tr><td colspan="8" class="text-center">Gagal memuat data. Silahkan coba lagi.</td></tr>');
+                $('#dataTable tbody').html('<tr><td colspan="5" class="text-center">Gagal memuat data. Silahkan coba lagi.</td></tr>');
                 console.error('Error loading data:', xhr);
             }
         });

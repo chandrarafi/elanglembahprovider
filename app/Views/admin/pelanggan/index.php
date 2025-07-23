@@ -24,11 +24,12 @@
             <table id="pelangganTable" class="table table-striped table-bordered" style="width:100%">
                 <thead>
                     <tr>
-                        <th>ID Pelanggan</th>
-                        <th>Nama Pelanggan</th>
+                        <th>ID</th>
+                        <th>Nama</th>
+                        <th>Email</th>
                         <th>No. HP</th>
                         <th>Alamat</th>
-                        <th>Akun User</th>
+                        <th>Username</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -39,107 +40,67 @@
 
 <!-- Modal Pelanggan -->
 <div class="modal fade" id="pelangganModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Form Pelanggan</h5>
+                <h5 class="modal-title">Tambah Pelanggan</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="pelangganForm" onsubmit="savePelanggan(event)">
-                <div class="modal-body">
-                    <!-- Hidden ID field -->
-                    <input type="hidden" id="idpelanggan" name="idpelanggan">
-
-                    <div class="mb-3">
-                        <label class="form-label">Nama Pelanggan <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="namapelanggan" name="namapelanggan" required>
-                        <div class="invalid-feedback" id="namapelanggan-error"></div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">No. HP</label>
-                        <input type="text" class="form-control" id="nohp" name="nohp">
-                        <div class="invalid-feedback" id="nohp-error"></div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Alamat</label>
-                        <textarea class="form-control" id="alamat" name="alamat" rows="3"></textarea>
-                        <div class="invalid-feedback" id="alamat-error"></div>
-                    </div>
-
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="create_user" name="create_user" value="1">
-                            <label class="form-check-label" for="create_user">
-                                Buatkan akun user untuk pelanggan ini
-                            </label>
+            <div class="modal-body">
+                <form id="pelangganForm">
+                    <input type="hidden" id="id" name="id">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Nama Pelanggan</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                            <div class="invalid-feedback" id="name-feedback"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">No. HP</label>
+                            <input type="text" class="form-control" id="phone" name="phone">
+                            <div class="invalid-feedback" id="phone-feedback"></div>
                         </div>
                     </div>
-
-                    <div class="mb-3" id="emailField" style="display: none;">
-                        <label class="form-label">Email <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control" id="email" name="email">
-                        <div class="invalid-feedback" id="email-error"></div>
-                        <small class="text-muted">Email diperlukan untuk membuat akun user</small>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Alamat</label>
+                        <textarea class="form-control" id="address" name="address" rows="3"></textarea>
+                        <div class="invalid-feedback" id="address-feedback"></div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                </div>
-            </form>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                        <div class="invalid-feedback" id="email-feedback"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-primary" id="savePelanggan">Simpan</button>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Modal User Account -->
 <div class="modal fade" id="userAccountModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Informasi Akun User</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-success">
-                    <h6>Akun user berhasil dibuat!</h6>
-                    <p class="mb-0">Berikut adalah informasi login:</p>
+                <div class="alert alert-success" role="alert">
+                    <h4 class="alert-heading">Akun Berhasil Dibuat!</h4>
+                    <p>Berikut adalah informasi akun untuk login:</p>
+                    <hr>
+                    <p class="mb-0"><strong>Username:</strong> <span id="accountUsername"></span></p>
+                    <p class="mb-0"><strong>Password:</strong> <span id="accountPassword"></span></p>
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Username</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="userUsername" readonly>
-                        <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('userUsername')">
-                            <i class="bx bx-copy"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Password</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="userPassword" readonly>
-                        <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard('userPassword')">
-                            <i class="bx bx-copy"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="alert alert-warning">
-                    <i class="bx bx-info-circle"></i> Harap catat informasi ini. Password tidak dapat dilihat kembali setelah menutup dialog ini.
-                </div>
-
-                <div class="alert alert-info">
-                    <small>
-                        <i class="bx bx-info-circle"></i> Password default untuk semua akun pelanggan adalah: <strong>123456</strong><br>
-                        Pelanggan dapat mengubah password setelah login pertama kali.
-                    </small>
-                </div>
+                <p>Mohon catat informasi ini atau beritahu pelanggan untuk segera mengganti password setelah login pertama.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
@@ -165,30 +126,33 @@
                 url: '/admin/getPelanggan'
             },
             columns: [{
-                    data: 'idpelanggan'
+                    data: 'id'
                 },
                 {
-                    data: 'namapelanggan'
+                    data: 'name'
                 },
                 {
-                    data: 'nohp',
+                    data: 'email',
                     render: function(data) {
                         return data || '<span class="text-muted">-</span>';
                     }
                 },
                 {
-                    data: 'alamat',
+                    data: 'phone',
+                    render: function(data) {
+                        return data || '<span class="text-muted">-</span>';
+                    }
+                },
+                {
+                    data: 'address',
                     render: function(data) {
                         return data || '<span class="text-muted">-</span>';
                     }
                 },
                 {
                     data: 'username',
-                    render: function(data, type, row) {
-                        if (data) {
-                            return `<span class="badge bg-success">Ada (${data})</span>`;
-                        }
-                        return '<span class="badge bg-secondary">Tidak Ada</span>';
+                    render: function(data) {
+                        return data || '<span class="text-muted">-</span>';
                     }
                 },
                 {
@@ -196,10 +160,10 @@
                     orderable: false,
                     render: function(data) {
                         return `
-                        <button class="btn btn-sm btn-info" onclick="editPelanggan('${data.idpelanggan}')">
+                        <button class="btn btn-sm btn-info" onclick="editPelanggan('${data.id}')">
                             <i class="bx bx-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deletePelanggan('${data.idpelanggan}')">
+                        <button class="btn btn-sm btn-danger" onclick="deletePelanggan('${data.id}')">
                             <i class="bx bx-trash"></i>
                         </button>
                     `;
@@ -210,17 +174,6 @@
                 [0, 'asc']
             ]
         });
-
-        // Toggle email field based on checkbox
-        $('#create_user').change(function() {
-            if ($(this).is(':checked')) {
-                $('#emailField').show();
-                $('#email').attr('required', true);
-            } else {
-                $('#emailField').hide();
-                $('#email').removeAttr('required');
-            }
-        });
     });
 
     function showAddModal() {
@@ -228,16 +181,11 @@
 
         // Reset form
         $('#pelangganForm')[0].reset();
-        $('#idpelanggan').val('');
+        $('#id').val('');
 
         // Reset validation
         $('.is-invalid').removeClass('is-invalid');
         $('.invalid-feedback').html('');
-
-        // Reset user account checkbox
-        $('#create_user').prop('checked', false).prop('disabled', false);
-        $('#emailField').hide();
-        $('#email').removeAttr('required');
 
         // Set modal title
         $('.modal-title').text('Tambah Pelanggan');
@@ -258,142 +206,105 @@
         $('.modal-title').text('Edit Pelanggan');
 
         // Get pelanggan data
-        $.get(`/admin/pelanggan/${id}`, function(response) {
-            if (response.status === 'success') {
-                const pelanggan = response.data;
+        $.ajax({
+            url: `/admin/getPelangganById/${id}`,
+            type: 'GET',
+            success: function(response) {
+                if (response.status === 'success') {
+                    const pelanggan = response.data;
 
-                // Set form values
-                $('#idpelanggan').val(pelanggan.idpelanggan);
-                $('#namapelanggan').val(pelanggan.namapelanggan);
-                $('#nohp').val(pelanggan.nohp);
-                $('#alamat').val(pelanggan.alamat);
+                    // Fill form fields
+                    $('#id').val(pelanggan.id);
+                    $('#name').val(pelanggan.name);
+                    $('#phone').val(pelanggan.phone);
+                    $('#address').val(pelanggan.address);
+                    $('#email').val(pelanggan.email);
 
-                // Handle user account
-                if (pelanggan.has_account) {
-                    $('#create_user').prop('checked', true).prop('disabled', true);
-                    $('#emailField').show();
-                    $('#email').val(pelanggan.email || '');
-                    $('#email').attr('required', true);
+                    // Show modal
+                    pelangganModal.show();
                 } else {
-                    $('#create_user').prop('checked', false).prop('disabled', false);
-                    $('#emailField').hide();
-                    $('#email').removeAttr('required');
+                    Swal.fire('Error', response.message, 'error');
                 }
-
-                // Show modal
-                pelangganModal.show();
-            } else {
-                Swal.fire('Error', response.message || 'Gagal mengambil data pelanggan', 'error');
+            },
+            error: function() {
+                Swal.fire('Error', 'Gagal mengambil data pelanggan', 'error');
             }
-        }).fail(function(xhr) {
-            Swal.fire('Error', xhr.responseJSON?.message || 'Gagal mengambil data pelanggan', 'error');
         });
     }
 
-    function savePelanggan(e) {
-        e.preventDefault();
-
-        // Reset validation
-        $('.is-invalid').removeClass('is-invalid');
-        $('.invalid-feedback').html('');
+    $('#savePelanggan').click(function() {
+        // Validate form
+        const form = $('#pelangganForm')[0];
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
 
         // Get form data
-        const formData = new FormData(document.getElementById('pelangganForm'));
-        const id = $('#idpelanggan').val();
-        const url = id ? `/admin/updatePelanggan/${id}` : '/admin/createPelanggan';
+        const formData = new FormData(form);
 
-        // Pastikan nilai create_user diatur dengan benar
-        if ($('#create_user').is(':checked')) {
-            formData.set('create_user', '1');
-
-            // Validasi email jika checkbox dicentang
-            const email = $('#email').val().trim();
-            if (!email) {
-                $('#email').addClass('is-invalid');
-                $('#email-error').html('Email harus diisi jika ingin membuat akun user');
-                Swal.fire('Error', 'Email harus diisi jika ingin membuat akun user', 'error');
-                return;
-            }
-        } else {
-            formData.set('create_user', '0');
-        }
-
-        // Debug form data
-        console.log('Create user checked:', $('#create_user').is(':checked'));
-        console.log('Email value:', $('#email').val());
-        for (let pair of formData.entries()) {
-            console.log(pair[0] + ': ' + pair[1]);
-        }
-
-        // Show loading
-        const submitBtn = $(e.target).find('button[type="submit"]');
-        const originalText = submitBtn.html();
-        submitBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan...');
-        submitBtn.prop('disabled', true);
-
-        // Submit form
+        // Send request
         $.ajax({
-            url: url,
+            url: isEdit ? `/admin/updatePelanggan/${$('#id').val()}` : '/admin/createPelanggan',
             type: 'POST',
             data: formData,
             processData: false,
             contentType: false,
             success: function(response) {
-                console.log('Response:', response);
                 if (response.status === 'success') {
                     pelangganModal.hide();
+
+                    // Show success message
+                    Swal.fire({
+                        title: 'Berhasil',
+                        text: response.message,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    // Refresh DataTable
                     pelangganTable.ajax.reload();
 
-                    // Show user account info if created
+                    // Show user account info if available
                     if (response.user_account) {
-                        $('#userUsername').val(response.user_account.username);
-                        $('#userPassword').val(response.user_account.password);
+                        $('#accountUsername').text(response.user_account.username);
+                        $('#accountPassword').text(response.user_account.password);
                         userAccountModal.show();
-                    } else {
-                        Swal.fire('Sukses', response.message, 'success');
                     }
                 } else {
-                    // Tangani error
-                    if (response.errors && response.errors.email) {
-                        $('#email').addClass('is-invalid');
-                        $('#email-error').html(response.errors.email);
+                    // Show validation errors
+                    if (response.errors) {
+                        Object.keys(response.errors).forEach(function(key) {
+                            $(`#${key}`).addClass('is-invalid');
+                            $(`#${key}-feedback`).html(response.errors[key]);
+                        });
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
                     }
-                    Swal.fire('Error', response.message || 'Terjadi kesalahan', 'error');
                 }
             },
             error: function(xhr) {
-                console.error('Error:', xhr);
                 const response = xhr.responseJSON || {};
-                console.log('Error response:', response);
-
                 if (response.errors) {
-                    // Show validation errors
                     Object.keys(response.errors).forEach(function(key) {
                         $(`#${key}`).addClass('is-invalid');
-                        $(`#${key}-error`).html(response.errors[key]);
+                        $(`#${key}-feedback`).html(response.errors[key]);
                     });
-                    Swal.fire('Error', 'Ada kesalahan pada form. Silakan periksa kembali.', 'error');
                 } else {
-                    Swal.fire('Error', response.message || 'Terjadi kesalahan saat menyimpan data', 'error');
+                    Swal.fire('Error', response.message || 'Terjadi kesalahan', 'error');
                 }
-            },
-            complete: function() {
-                // Restore button
-                submitBtn.html(originalText);
-                submitBtn.prop('disabled', false);
             }
         });
-    }
+    });
 
     function deletePelanggan(id) {
         Swal.fire({
             title: 'Konfirmasi',
-            text: 'Apakah Anda yakin ingin menghapus pelanggan ini? Jika pelanggan memiliki akun user, akun tersebut juga akan dihapus.',
+            text: 'Apakah Anda yakin ingin menghapus pelanggan ini?',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Ya, Hapus!',
+            confirmButtonText: 'Ya, Hapus',
             cancelButtonText: 'Batal'
         }).then((result) => {
             if (result.isConfirmed) {
@@ -402,37 +313,24 @@
                     type: 'DELETE',
                     success: function(response) {
                         if (response.status === 'success') {
+                            Swal.fire({
+                                title: 'Berhasil',
+                                text: response.message,
+                                icon: 'success',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
                             pelangganTable.ajax.reload();
-                            Swal.fire('Sukses', response.message, 'success');
                         } else {
-                            Swal.fire('Error', response.message || 'Gagal menghapus pelanggan', 'error');
+                            Swal.fire('Error', response.message, 'error');
                         }
                     },
-                    error: function(xhr) {
-                        Swal.fire('Error', xhr.responseJSON?.message || 'Gagal menghapus pelanggan', 'error');
+                    error: function() {
+                        Swal.fire('Error', 'Gagal menghapus pelanggan', 'error');
                     }
                 });
             }
         });
-    }
-
-    function copyToClipboard(elementId) {
-        const element = document.getElementById(elementId);
-        element.select();
-        document.execCommand('copy');
-
-        // Show tooltip
-        const tooltip = document.createElement('div');
-        tooltip.className = 'position-absolute top-0 start-50 translate-middle badge bg-success';
-        tooltip.innerText = 'Disalin!';
-        tooltip.style.zIndex = '1050';
-
-        element.parentElement.appendChild(tooltip);
-
-        // Remove tooltip after 1.5 seconds
-        setTimeout(() => {
-            tooltip.remove();
-        }, 1500);
     }
 </script>
 <?= $this->endSection() ?>

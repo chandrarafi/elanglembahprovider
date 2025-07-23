@@ -585,14 +585,10 @@ class Pemesanan extends BaseController
      */
     public function create()
     {
-        // Load model pelanggan
-        $pelangganModel = new \App\Models\PelangganModel();
-
         $data = [
             'title' => 'Buat Pemesanan Baru',
             'paket' => $this->paketModel->where('statuspaket', 'active')->findAll(),
-            'users' => $this->userModel->where('role', 'user')->findAll(),
-            'pelanggan' => $pelangganModel->getPelangganWithUser() // Get pelanggan with associated user data
+            'users' => $this->userModel->where('role', 'pelanggan')->where('deleted_at', null)->findAll()
         ];
 
         return view('admin/pemesanan/create', $data);
@@ -791,9 +787,6 @@ class Pemesanan extends BaseController
                 ->with('error', 'Pemesanan yang sudah selesai tidak dapat diedit');
         }
 
-        // Load model pelanggan
-        $pelangganModel = new \App\Models\PelangganModel();
-
         // Get paket and user data
         $paket = $this->paketModel->find($pemesanan['idpaket']);
         $user = $this->userModel->find($pemesanan['iduser']);
@@ -802,8 +795,7 @@ class Pemesanan extends BaseController
             'title' => 'Edit Pemesanan',
             'pemesanan' => $pemesanan,
             'paket' => $this->paketModel->where('statuspaket', 'active')->findAll(),
-            'users' => $this->userModel->where('role', 'user')->findAll(),
-            'pelanggan' => $pelangganModel->getPelangganWithUser(),
+            'users' => $this->userModel->where('role', 'pelanggan')->where('deleted_at', null)->findAll(),
             'selected_paket' => $paket,
             'selected_user' => $user,
             'validation' => \Config\Services::validation(),
